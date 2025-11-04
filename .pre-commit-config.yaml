@@ -1,0 +1,31 @@
+repos:
+  - repo: local
+    hooks:
+      - id: conventional-commits
+        name: Check conventional commit message
+        entry: python .pre-commit-hooks/check-commit-msg.py
+        language: system
+        pass_filenames: true
+        stages: [commit-msg]
+
+      - id: autoformat
+        name: Auto-format with rosemary
+        entry: rosemary linter:fix
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+
+      - id: flake8
+        name: Run flake8
+        entry: flake8 --config=pyproject.toml --count --show-source --statistics core app rosemary
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+
+      - id: tests
+        name: Run tests
+        entry: rosemary test
+        language: system
+        pass_filenames: false
+        stages: [pre-merge-commit]
+

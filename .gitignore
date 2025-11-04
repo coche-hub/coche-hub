@@ -33,7 +33,8 @@ coverage.xml
 # ==========================
 # Config & environment
 # ==========================
-.env
+.env*
+!.env*.example
 .version
 nginx.prod.ssl.conf
 entrypoint.sh
