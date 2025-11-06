@@ -12,6 +12,14 @@ You can consult the official documentation of the project at [docs.uvlhub.io](ht
 
 ## Development
 
+Before running the server for local development, you'll need to get an instance of Mailhog running through docker.
+Of course, this means you will need to have Docker and docker compose installed even for local development.
+For guidance on how, see the original UVLHub documentation.
+Run:
+```
+docker compose --env-file .env -f ./docker/docker-compose.local.yml up
+```
+
 After running the steps for a local installation required for the documentation, and within the venv, run:
 
 ```bash
