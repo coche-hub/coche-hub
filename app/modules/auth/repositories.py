@@ -1,4 +1,7 @@
-from app.modules.auth.models import User
+from datetime import datetime, timezone
+from uuid import UUID
+
+from app.modules.auth.models import EmailValidationCode, User
 from core.repositories.BaseRepository import BaseRepository
 
 
@@ -19,3 +22,16 @@ class UserRepository(BaseRepository):
 
     def get_by_email(self, email: str):
         return self.model.query.filter_by(email=email).first()
+
+
+class EmailValidationCodeRepository(BaseRepository):
+    def __init__(self):
+        super().__init__(EmailValidationCode)
+
+    def is_code_valid_for_user(self, validation_code: UUID, user_id: int) -> bool:
+        return (
+            self.model.query.filter_by(user_id=user_id, id=validation_code)
+            .filter(EmailValidationCode.valid_until > datetime.now(tz=timezone.utc))
+            .first()
+            is not None
+        )

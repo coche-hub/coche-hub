@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validate Your Email - Coche-Hub</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4;">
+    <table role="presentation" style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td align="center" style="padding: 40px 0;">
+                <table role="presentation" style="width: 600px; max-width: 100%; border-collapse: collapse; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <!-- Header -->
+                    <tr>
+                        <td style="padding: 40px 30px; text-align: center; background-color: #3b7ddd; border-radius: 8px 8px 0 0;">
+                            <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600;">Coche-Hub</h1>
+                        </td>
+                    </tr>
+                    <!-- Body -->
+                    <tr>
+                        <td style="padding: 40px 30px;">
+                            <h2 style="margin: 0 0 20px 0; color: #333333; font-size: 20px; font-weight: 600;">Validate Your Email Address</h2>
+                            <p style="margin: 0 0 20px 0; color: #666666; font-size: 16px; line-height: 1.6;">
+                                Thank you for registering with Coche-Hub. To complete your registration and access all features, please validate your email address by clicking the button below.
+                            </p>
+                            <p style="margin: 0 0 30px 0; color: #666666; font-size: 14px; line-height: 1.6;">
+                                <strong>Note:</strong> This validation link will expire in <strong>15 minutes</strong>.
+                            </p>
+                            <!-- Button -->
+                            <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                                <tr>
+                                    <td align="center" style="padding: 0 0 30px 0;">
+                                        <a href="{{ validation_link }}" style="display: inline-block; padding: 14px 40px; background-color: #3b7ddd; color: #ffffff; text-decoration: none; border-radius: 4px; font-size: 16px; font-weight: 600;">Validate Email</a>
+                                    </td>
+                                </tr>
+                            </table>
+                            <!-- Fallback link -->
+                            <p style="margin: 0 0 10px 0; color: #999999; font-size: 13px; line-height: 1.6;">
+                                If the button doesn't work, copy and paste this link into your browser:
+                            </p>
+                            <p style="margin: 0; color: #3b7ddd; font-size: 13px; line-height: 1.6; word-break: break-all;">
+                                {{ validation_link }}
+                            </p>
+                        </td>
+                    </tr>
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding: 30px; text-align: center; background-color: #f8f9fa; border-radius: 0 0 8px 8px;">
+                            <p style="margin: 0 0 10px 0; color: #999999; font-size: 12px; line-height: 1.6;">
+                                If you did not create an account with Coche-Hub, please ignore this email.
+                            </p>
+                            <p style="margin: 0; color: #999999; font-size: 12px; line-height: 1.6;">
+                                &copy; 2024 Coche-Hub. University of Seville &middot; University of Malaga &middot; University of Ulm
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

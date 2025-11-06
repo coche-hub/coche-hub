@@ -3,10 +3,11 @@ from flask_login import current_user, login_user, logout_user
 
 from app.modules.auth import auth_bp
 from app.modules.auth.forms import LoginForm, SignupForm
-from app.modules.auth.services import AuthenticationService
+from app.modules.auth.services import AuthenticationService, EmailValidationService
 from app.modules.profile.services import UserProfileService
 
 authentication_service = AuthenticationService()
+email_validation_service = EmailValidationService()
 user_profile_service = UserProfileService()
 
 
@@ -52,3 +53,13 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for("public.index"))
+
+
+@auth_bp.route("/validate_email/<code>")
+def validate_email(code: str):
+    if not current_user.is_authenticated:
+        return redirect(url_for("auth.login"))
+
+    email_validated = email_validation_service.validate_email(current_user.id, code)
+
+    return render_template("auth/email_validation_result.html", success=email_validated)

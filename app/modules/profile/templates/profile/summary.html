@@ -7,6 +7,43 @@
 
 <h1 class="h3 mb-3">User profile</h1>
 
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="row">
+        <div class="col-12 col-md-8 col-lg-6 mb-3">
+          <div class="alert alert-{{ category }}" role="alert">
+            <div class="alert-message">
+              {% if category == 'success' %}
+                <h4 class="alert-heading"><i class="align-middle" data-feather="check-circle"></i> Success</h4>
+              {% elif category == 'error' %}
+                <h4 class="alert-heading"><i class="align-middle" data-feather="x-circle"></i> Error</h4>
+              {% endif %}
+              <p style="margin-bottom: 0px">{{ message }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+{% if not user.email_validated %}
+<div class="row">
+    <div class="col-12 col-md-8 col-lg-6 mb-3">
+        <div class="alert alert-warning" role="alert">
+            <div class="alert-message">
+                <h4 class="alert-heading"><i class="align-middle" data-feather="alert-triangle"></i> Email Not Validated</h4>
+                <p>Your email address has not been validated yet. Please validate your email to access all features.</p>
+                <form method="POST" action="{{ url_for('profile.send_validation_email') }}" style="margin-top: 10px;">
+                    <button type="submit" class="btn btn-sm btn-warning">Send Validation Email</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <div class="row">
 
     <div class="col-12 col-md-8 col-lg-6"> 
