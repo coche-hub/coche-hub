@@ -58,8 +58,6 @@ class AuthenticationService(BaseService):
             self.user_profile_repository.create(**profile_data)
             self.repository.session.commit()
 
-            print("We got here!")
-
             # Send email validation after successful user creation
             try:
                 self.email_validation_service.send_validation_email(user.id)
