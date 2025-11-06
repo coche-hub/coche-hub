@@ -4,5 +4,5 @@ services:
     logging:
       driver: 'none'
     ports:
-      - ${SMTP_PORT}:1025
+      - ${MAIL_PORT}:1025
       - 8025:8025
