@@ -62,14 +62,4 @@ def validate_email(code: str):
 
     email_validated = email_validation_service.validate_email(current_user.id, code)
 
-    return str(email_validated)
-
-
-@auth_bp.route("/test_send_validation_email")
-def test_send_validation_email():
-    if not current_user.is_authenticated:
-        return redirect(url_for("auth.login"))
-
-    email_validation_service.send_validation_email(current_user.id)
-
-    return "sent"
+    return render_template("auth/email_validation_result.html", success=email_validated)
