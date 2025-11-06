@@ -1,9 +1,13 @@
 import os
+from uuid import UUID
 
+from flask import current_app, url_for
 from flask_login import current_user, login_user
+from flask_mail import Message
 
+from app import mail
 from app.modules.auth.models import User
-from app.modules.auth.repositories import UserRepository
+from app.modules.auth.repositories import EmailValidationCodeRepository, UserRepository
 from app.modules.profile.models import UserProfile
 from app.modules.profile.repositories import UserProfileRepository
 from core.configuration.configuration import uploads_folder_name
@@ -76,3 +80,54 @@ class AuthenticationService(BaseService):
 
     def temp_folder_by_user(self, user: User) -> str:
         return os.path.join(uploads_folder_name(), "temp", str(user.id))
+
+
+class EmailValidationService(BaseService):
+    def __init__(self):
+        super().__init__(EmailValidationCodeRepository())
+        self.user_repository = UserRepository()
+
+    def send_validation_email(self, user_id: int):
+        email_validation_code = self.create(user_id=user_id)
+
+        validation_code = str(email_validation_code.id)
+
+        user = self.user_repository.get_by_id(user_id)
+
+        if user is None:
+            raise ValueError(f"User with id {user_id} not found")
+
+        domain = os.getenv("DOMAIN", "localhost")
+        http = current_app.config["DEBUG"] | current_app.config["TESTING"]
+        endpoint = url_for("auth.validate_email", code=validation_code)
+        link = f"{'http' if http else 'https'}://{domain}{endpoint}"
+
+        mail.send(
+            Message(
+                subject="Validate your Coche-Hub email",
+                body=f'To validate your Coche-Hub email, click on the following URL: <a href="{link}">{link}</a>',
+                recipients=[user.email],
+            )
+        )
+
+    def validate_email(self, user_id: int, validation_code: str) -> bool:
+        user = self.user_repository.get_by_id(user_id)
+
+        if user is None:
+            raise ValueError(f"User with id {user_id} not found")
+
+        if user.email_validated:
+            return True
+
+        try:
+            validation_code_uuid = UUID(validation_code)
+        except ValueError:
+            return False
+
+        valid = self.repository.is_code_valid_for_user(validation_code_uuid, user_id)
+
+        if valid:
+            self.update(user_id, email_validated=True)
+            return True
+        else:
+            return False
