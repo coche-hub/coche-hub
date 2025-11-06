@@ -45,6 +45,15 @@ services:
     networks:
       - uvlhub_network
 
+  mailhog:
+    image: mailhog/mailhog
+    logging:
+      driver: 'none'
+    ports:
+      - ${SMTP_PORT}:1025
+      - 8025:8025
+    networks: uvlhub_network
+
 volumes:
   db_data:
 
