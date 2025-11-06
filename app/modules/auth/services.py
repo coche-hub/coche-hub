@@ -1,7 +1,7 @@
 import os
 from uuid import UUID
 
-from flask import current_app, url_for
+from flask import current_app, render_template, url_for
 from flask_login import current_user, login_user
 from flask_mail import Message
 
@@ -102,10 +102,12 @@ class EmailValidationService(BaseService):
         endpoint = url_for("auth.validate_email", code=validation_code)
         link = f"{'http' if http else 'https'}://{domain}{endpoint}"
 
+        html_body = render_template("auth/email_validation.html", validation_link=link)
+
         mail.send(
             Message(
                 subject="Validate your Coche-Hub email",
-                body=f'To validate your Coche-Hub email, click on the following URL: <a href="{link}">{link}</a>',
+                html=html_body,
                 recipients=[user.email],
             )
         )
@@ -127,7 +129,7 @@ class EmailValidationService(BaseService):
         valid = self.repository.is_code_valid_for_user(validation_code_uuid, user_id)
 
         if valid:
-            self.update(user_id, email_validated=True)
+            self.user_repository.update(user_id, email_validated=True)
             return True
         else:
             return False
