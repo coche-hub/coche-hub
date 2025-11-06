@@ -1,8 +1,8 @@
-from flask import redirect, render_template, request, url_for
+from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from app import db
-from app.modules.auth.services import AuthenticationService
+from app.modules.auth.services import AuthenticationService, EmailValidationService
 from app.modules.dataset.models import DataSet
 from app.modules.profile import profile_bp
 from app.modules.profile.forms import UserProfileForm
@@ -53,3 +53,20 @@ def my_profile():
         pagination=user_datasets_pagination,
         total_datasets=total_datasets_count,
     )
+
+
+@profile_bp.route("/profile/send_validation_email", methods=["POST"])
+@login_required
+def send_validation_email():
+    if current_user.email_validated:
+        flash("Your email is already validated.", "info")
+        return redirect(url_for("profile.my_profile"))
+
+    try:
+        email_validation_service = EmailValidationService()
+        email_validation_service.send_validation_email(current_user.id)
+        flash("Validation email sent successfully. Please check your inbox.", "success")
+    except Exception as e:
+        flash(f"Error sending validation email: {str(e)}", "error")
+
+    return redirect(url_for("profile.my_profile"))
