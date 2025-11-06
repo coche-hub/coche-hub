@@ -2,6 +2,7 @@ import os
 
 from dotenv import load_dotenv
 from flask import Flask
+from flask_mail import Mail
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 
@@ -17,6 +18,7 @@ load_dotenv()
 # Create the instances
 db = SQLAlchemy()
 migrate = Migrate()
+mail = Mail()
 
 
 def create_app(config_name="development"):
@@ -54,6 +56,9 @@ def create_app(config_name="development"):
     # Initialize error handler manager
     error_handler_manager = ErrorHandlerManager(app)
     error_handler_manager.register_error_handlers()
+
+    # Initialize mail
+    mail.init_app(app)
 
     # Injecting environment variables into jinja context
     @app.context_processor

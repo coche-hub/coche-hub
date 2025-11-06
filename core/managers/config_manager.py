@@ -30,6 +30,11 @@ class Config:
         f"{os.getenv('MARIADB_DATABASE', 'default_db')}"
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    MAIL_SERVER = os.getenv("MAIL_HOST", "localhost")
+    MAIL_PORT = os.getenv("MAIL_PORT", "1025")
+    MAIL_USERNAME = os.getenv("MAIL_USERNAME", "default")
+    MAIL_PASSWORD = os.getenv("MAIL_PASSWORD", "default")
+    MAIL_DEFAULT_SENDER = os.getenv("MAIL_DEFAULT_SENDER", "default@coche-hub.io")
     TIMEZONE = "Europe/Madrid"
     TEMPLATES_AUTO_RELOAD = True
     UPLOAD_FOLDER = "uploads"
