@@ -105,7 +105,7 @@ class EmailValidationService(BaseService):
             raise ValueError(f"User with id {user_id} not found")
 
         domain = os.getenv("DOMAIN", "localhost")
-        http = current_app.config["DEBUG"] | current_app.config["TESTING"]
+        http = current_app.config["DEBUG"] or current_app.config["TESTING"]
         endpoint = url_for("auth.validate_email", code=validation_code)
         link = f"{'http' if http else 'https'}://{domain}{endpoint}"
 

@@ -31,7 +31,7 @@ class EmailValidationCodeRepository(BaseRepository):
     def is_code_valid_for_user(self, validation_code: UUID, user_id: int) -> bool:
         return (
             self.model.query.filter_by(user_id=user_id, id=validation_code)
-            .filter(EmailValidationCode.valid_until > datetime.now(tz=timezone.utc).isoformat())
+            .filter(EmailValidationCode.valid_until > datetime.now(tz=timezone.utc))
             .first()
             is not None
         )
