@@ -13,19 +13,29 @@ user_profile_service = UserProfileService()
 
 @auth_bp.route("/signup/", methods=["GET", "POST"])
 def show_signup_form():
+    print("1")
+
     if current_user.is_authenticated:
         return redirect(url_for("public.index"))
 
+    print("2")
+
     form = SignupForm()
     if form.validate_on_submit():
+        print("3")
+
         email = form.email.data
         if not authentication_service.is_email_available(email):
             return render_template("auth/signup_form.html", form=form, error=f"Email {email} in use")
+
+        print("4")
 
         try:
             user = authentication_service.create_with_profile(**form.data)
         except Exception as exc:
             return render_template("auth/signup_form.html", form=form, error=f"Error creating user: {exc}")
+
+        print("5")
 
         # Log user
         login_user(user, remember=True)

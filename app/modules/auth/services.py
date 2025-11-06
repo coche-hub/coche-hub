@@ -18,6 +18,7 @@ class AuthenticationService(BaseService):
     def __init__(self):
         super().__init__(UserRepository())
         self.user_profile_repository = UserProfileRepository()
+        self.email_validation_service = EmailValidationService()
 
     def login(self, email, password, remember=True):
         user = self.repository.get_by_email(email)
@@ -56,6 +57,14 @@ class AuthenticationService(BaseService):
             profile_data["user_id"] = user.id
             self.user_profile_repository.create(**profile_data)
             self.repository.session.commit()
+
+            print("We got here!")
+
+            # Send email validation after successful user creation
+            try:
+                self.email_validation_service.send_validation_email(user.id)
+            except Exception as exc:
+                print(f"Error sending validation email: {exc}")
         except Exception as exc:
             self.repository.session.rollback()
             raise exc

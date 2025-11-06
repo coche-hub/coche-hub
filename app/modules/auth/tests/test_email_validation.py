@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from app import db
+from app import db, mail
 from app.modules.auth.models import EmailValidationCode, User
 from app.modules.auth.services import EmailValidationService
 from app.modules.profile.models import UserProfile
@@ -32,8 +32,11 @@ def test_send_validation_email(test_client):
         user = User.query.filter_by(email="validation_test@example.com").first()
         assert user is not None
 
-        service = EmailValidationService()
-        service.send_validation_email(user.id)
+        with mail.record_messages() as outbox:
+            service = EmailValidationService()
+            service.send_validation_email(user.id)
+            assert len(outbox) == 1
+            assert outbox[0].subject == "Validate your Coche-Hub email"
 
         code = EmailValidationCode.query.filter_by(user_id=user.id).first()
         assert code is not None
@@ -172,7 +175,11 @@ def test_validation_endpoint_with_valid_code(test_client):
 
         code = EmailValidationCode.query.filter_by(user_id=user.id).first()
 
-    test_client.post("/login", data=dict(email="endpoint_test@example.com", password="test1234"), follow_redirects=True)
+    test_client.post(
+        "/login",
+        data=dict(email="endpoint_test@example.com", password="test1234"),
+        follow_redirects=True,
+    )
     response = test_client.get(f"/validate_email/{code.id}", follow_redirects=True)
 
     assert response.status_code == 200
@@ -183,7 +190,11 @@ def test_validation_endpoint_with_valid_code(test_client):
 
 def test_validation_endpoint_with_invalid_code(test_client):
     """Test the validation endpoint with an invalid code"""
-    test_client.post("/login", data=dict(email="test@example.com", password="test1234"), follow_redirects=True)
+    test_client.post(
+        "/login",
+        data=dict(email="test@example.com", password="test1234"),
+        follow_redirects=True,
+    )
     response = test_client.get("/validate_email/00000000-0000-0000-0000-000000000000", follow_redirects=True)
 
     assert response.status_code == 200

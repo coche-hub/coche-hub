@@ -1,6 +1,7 @@
 import pytest
 from flask import url_for
 
+from app import mail
 from app.modules.auth.repositories import UserRepository
 from app.modules.auth.services import AuthenticationService
 from app.modules.profile.repositories import UserProfileRepository
@@ -73,6 +74,22 @@ def test_signup_user_successful(test_client):
         follow_redirects=True,
     )
     assert response.request.path == url_for("public.index"), "Signup was unsuccessful"
+
+
+def test_signup_sends_validation_email(test_client):
+    test_client.get("/logout")
+
+    test_email = "validation_signup_7823@example.com"
+
+    with mail.record_messages() as outbox:
+        response = test_client.post(
+            "/signup",
+            data=dict(name="Validation", surname="Signup", email=test_email, password="test1234"),
+            follow_redirects=True,
+        )
+        assert response.request.path == url_for("public.index"), "Signup was unsuccessful"
+        assert len(outbox) == 1
+        assert outbox[0].subject == "Validate your Coche-Hub email"
 
 
 def test_service_create_with_profie_success(clean_database):
