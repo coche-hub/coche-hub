@@ -3,7 +3,12 @@ from flask_login import current_user, login_user, logout_user
 
 from app.modules.auth import auth_bp
 from app.modules.auth.forms import Email2FAVerificationForm, LoginForm, SignupForm
-from app.modules.auth.services import AuthenticationService, Email2FAService, EmailValidationService
+from app.modules.auth.services import (
+    AuthenticationService,
+    Email2FAService,
+    EmailValidationService,
+    TwoFARateLimitExceeded,
+)
 from app.modules.profile.services import UserProfileService
 
 authentication_service = AuthenticationService()
@@ -81,16 +86,23 @@ def verify_2fa():
         user_id = session["pending_2fa_user_id"]
         code = form.code.data
 
-        if email_2fa_service.verify_2fa_code(user_id, code):
-            # Code is valid, log the user in
-            user = authentication_service.repository.get_by_id(user_id)
-            if user:
-                login_user(user, remember=True)
-                # Clear the pending 2FA session
-                session.pop("pending_2fa_user_id", None)
-                return redirect(url_for("public.index"))
+        try:
+            if email_2fa_service.verify_2fa_code(user_id, code):
+                # Code is valid, log the user in
+                user = authentication_service.repository.get_by_id(user_id)
+                if user:
+                    login_user(user, remember=True)
+                    # Clear the pending 2FA session
+                    session.pop("pending_2fa_user_id", None)
+                    return redirect(url_for("public.index"))
 
-        return render_template("auth/email_2fa_verification_form.html", form=form, error="Invalid or expired code")
+            return render_template("auth/email_2fa_verification_form.html", form=form, error="Invalid or expired code")
+        except TwoFARateLimitExceeded:
+            return render_template(
+                "auth/email_2fa_verification_form.html",
+                form=form,
+                error="Too many failed attempts. Please try again later.",
+            )
 
     return render_template("auth/email_2fa_verification_form.html", form=form)
 

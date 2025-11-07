@@ -20,6 +20,10 @@ from core.configuration.configuration import uploads_folder_name
 from core.services.BaseService import BaseService
 
 
+class TwoFARateLimitExceeded(Exception):
+    """Raised when a user exceeds the maximum number of 2FA attempts"""
+
+
 class AuthenticationService(BaseService):
     def __init__(self):
         super().__init__(UserRepository())
@@ -191,7 +195,7 @@ class Email2FAService(BaseService):
             raise ValueError(f"User with id {user_id} not found")
 
         if self.two_fa_attempt_repository.get_failed_attempts_in_window(user_id) >= self.MAX_ATTEMPTS:
-            return False
+            raise TwoFARateLimitExceeded("Too many failed 2FA attempts. Please try again later.")
 
         valid = self.repository.is_code_valid_for_user(code, user_id)
 
