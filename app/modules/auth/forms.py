@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import BooleanField, PasswordField, StringField, SubmitField
+from wtforms import BooleanField, IntegerField, PasswordField, StringField, SubmitField
 from wtforms.validators import DataRequired, Email, Length
 
 
@@ -16,3 +16,12 @@ class LoginForm(FlaskForm):
     password = PasswordField("Password", validators=[DataRequired()])
     remember_me = BooleanField("Remember me")
     submit = SubmitField("Login")
+
+
+class Email2FAVerificationForm(FlaskForm):
+    code = IntegerField(
+        "Validation code",
+        validators=[
+            DataRequired(),
+        ],
+    )
