@@ -67,6 +67,48 @@
 
 </div>
 
+{% if user.email_validated %}
+<div class="row">
+    <div class="col-12 col-md-8 col-lg-6 mb-3">
+        <div class="card shadow-sm">
+            <div class="card-header card-dark">
+                <h5 class="card-title mb-0" style="color: white; font-size: 15px;">Security Settings</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <p class="mb-1"><strong><i class="fa fa-envelope"></i> Email Two-Factor Authentication</strong></p>
+                        <p class="text-muted small mb-0">Add an extra layer of security to your account with email verification</p>
+                    </div>
+                    <div>
+                        {% if user.email_2fa_enabled %}
+                            <span class="badge bg-success">Enabled</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Disabled</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="mt-3">
+                    {% if user.email_2fa_enabled %}
+                        <form method="POST" action="{{ url_for('profile.disable_email_2fa') }}">
+                            <button type="submit" class="btn btn-sm btn-danger">
+                                <i class="fa fa-lock"></i> Disable Email 2FA
+                            </button>
+                        </form>
+                    {% else %}
+                        <form method="POST" action="{{ url_for('profile.enable_email_2fa') }}">
+                            <button type="submit" class="btn btn-sm btn-primary">
+                                <i class="fa fa-lock"></i> Enable Email 2FA
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <h1 class="h3 mb-3">User datasets</h1>
 
     {% if datasets %}
