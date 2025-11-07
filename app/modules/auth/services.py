@@ -1,4 +1,5 @@
 import os
+import secrets
 from uuid import UUID
 
 from flask import current_app, render_template, url_for
@@ -7,11 +8,20 @@ from flask_mail import Message
 
 from app import mail
 from app.modules.auth.models import User
-from app.modules.auth.repositories import EmailValidationCodeRepository, UserRepository
+from app.modules.auth.repositories import (
+    Email2FACodeRepository,
+    EmailValidationCodeRepository,
+    TwoFAAttemptRepository,
+    UserRepository,
+)
 from app.modules.profile.models import UserProfile
 from app.modules.profile.repositories import UserProfileRepository
 from core.configuration.configuration import uploads_folder_name
 from core.services.BaseService import BaseService
+
+
+class TwoFARateLimitExceeded(Exception):
+    """Raised when a user exceeds the maximum number of 2FA attempts"""
 
 
 class AuthenticationService(BaseService):
@@ -140,3 +150,89 @@ class EmailValidationService(BaseService):
             return True
         else:
             return False
+
+
+class Email2FAService(BaseService):
+    MAX_ATTEMPTS = 5
+
+    def __init__(self):
+        super().__init__(Email2FACodeRepository())
+        self.user_repository = UserRepository()
+        self.two_fa_attempt_repository = TwoFAAttemptRepository()
+
+    def generate_code(self):
+        return str(secrets.randbelow(1000000)).zfill(6)
+
+    def send_2fa_code(self, user_id: int):
+        user = self.user_repository.get_by_id(user_id)
+
+        if user is None:
+            raise ValueError(f"User with id {user_id} not found")
+
+        self.repository.invalidate_all_codes_for_user(user_id)
+
+        code = self.generate_code()
+
+        self.create(user_id=user_id, code=code)
+
+        html_body = render_template("auth/email_2fa_code.html", code=code, user_name=user.profile.name)
+
+        mail.send(
+            Message(
+                subject="Your Coche-Hub 2FA Code",
+                html=html_body,
+                recipients=[user.email],
+            )
+        )
+
+        return code
+
+    def verify_2fa_code(self, user_id: int, code: int | str) -> bool:
+        code = str(code)
+        user = self.user_repository.get_by_id(user_id)
+
+        if user is None:
+            raise ValueError(f"User with id {user_id} not found")
+
+        if self.two_fa_attempt_repository.get_failed_attempts_in_window(user_id) >= self.MAX_ATTEMPTS:
+            raise TwoFARateLimitExceeded("Too many failed 2FA attempts. Please try again later.")
+
+        valid = self.repository.is_code_valid_for_user(code, user_id)
+
+        if valid:
+            valid = self.repository.is_code_valid_for_user(code, user_id)
+            self.repository.invalidate_all_codes_for_user(user_id)
+            self.two_fa_attempt_repository.record_attempt(user_id, True)
+            return True
+        else:
+            self.two_fa_attempt_repository.record_attempt(user_id, False)
+            return False
+
+    def enable_email_2fa(self, user_id: int) -> bool:
+        user = self.user_repository.get_by_id(user_id)
+
+        if user is None:
+            raise ValueError(f"User with id {user_id} not found")
+
+        if user.email_2fa_enabled:
+            return True
+
+        if not user.email_validated:
+            raise ValueError(
+                f"User with id {user_id} does not have a validated email.\nEmail must be validated before enabling 2FA"
+            )
+
+        self.user_repository.update(user_id, email_2fa_enabled=True)
+        return True
+
+    def disable_email_2fa(self, user_id: int) -> bool:
+        user = self.user_repository.get_by_id(user_id)
+
+        if user is None:
+            raise ValueError(f"User with id {user_id} not found")
+
+        if not user.email_2fa_enabled:
+            return True
+
+        self.user_repository.update(user_id, email_2fa_enabled=False)
+        return True

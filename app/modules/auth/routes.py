@@ -1,13 +1,19 @@
-from flask import redirect, render_template, request, url_for
+from flask import redirect, render_template, request, session, url_for
 from flask_login import current_user, login_user, logout_user
 
 from app.modules.auth import auth_bp
-from app.modules.auth.forms import LoginForm, SignupForm
-from app.modules.auth.services import AuthenticationService, EmailValidationService
+from app.modules.auth.forms import Email2FAVerificationForm, LoginForm, SignupForm
+from app.modules.auth.services import (
+    AuthenticationService,
+    Email2FAService,
+    EmailValidationService,
+    TwoFARateLimitExceeded,
+)
 from app.modules.profile.services import UserProfileService
 
 authentication_service = AuthenticationService()
 email_validation_service = EmailValidationService()
+email_2fa_service = Email2FAService()
 user_profile_service = UserProfileService()
 
 
@@ -41,8 +47,22 @@ def login():
 
     form = LoginForm()
     if request.method == "POST" and form.validate_on_submit():
-        if authentication_service.login(form.email.data, form.password.data):
-            return redirect(url_for("public.index"))
+        # First, verify the credentials
+        user = authentication_service.repository.get_by_email(form.email.data)
+        if user is not None and user.check_password(form.password.data):
+            # Check if 2FA is enabled for this user
+            if user.email_2fa_enabled:
+                # Store pending user_id in session and send 2FA code
+                session["pending_2fa_user_id"] = user.id
+                try:
+                    email_2fa_service.send_2fa_code(user.id)
+                    return redirect(url_for("auth.verify_2fa"))
+                except Exception as exc:
+                    return render_template("auth/login_form.html", form=form, error=f"Error sending 2FA code: {exc}")
+            else:
+                # No 2FA, log in directly
+                login_user(user, remember=form.remember_me.data)
+                return redirect(url_for("public.index"))
 
         return render_template("auth/login_form.html", form=form, error="Invalid credentials")
 
@@ -53,6 +73,38 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for("public.index"))
+
+
+@auth_bp.route("/login/verify_2fa", methods=["GET", "POST"])
+def verify_2fa():
+    # Check if user has pending 2FA verification
+    if "pending_2fa_user_id" not in session:
+        return redirect(url_for("auth.login"))
+
+    form = Email2FAVerificationForm()
+    if request.method == "POST" and form.validate_on_submit():
+        user_id = session["pending_2fa_user_id"]
+        code = form.code.data
+
+        try:
+            if email_2fa_service.verify_2fa_code(user_id, code):
+                # Code is valid, log the user in
+                user = authentication_service.repository.get_by_id(user_id)
+                if user:
+                    login_user(user, remember=True)
+                    # Clear the pending 2FA session
+                    session.pop("pending_2fa_user_id", None)
+                    return redirect(url_for("public.index"))
+
+            return render_template("auth/email_2fa_verification_form.html", form=form, error="Invalid or expired code")
+        except TwoFARateLimitExceeded:
+            return render_template(
+                "auth/email_2fa_verification_form.html",
+                form=form,
+                error="Too many failed attempts. Please try again later.",
+            )
+
+    return render_template("auth/email_2fa_verification_form.html", form=form)
 
 
 @auth_bp.route("/validate_email/<code>")

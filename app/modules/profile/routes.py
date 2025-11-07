@@ -2,7 +2,11 @@ from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from app import db
-from app.modules.auth.services import AuthenticationService, EmailValidationService
+from app.modules.auth.services import (
+    AuthenticationService,
+    Email2FAService,
+    EmailValidationService,
+)
 from app.modules.dataset.models import DataSet
 from app.modules.profile import profile_bp
 from app.modules.profile.forms import UserProfileForm
@@ -22,7 +26,12 @@ def edit_profile():
         service = UserProfileService()
         result, errors = service.update_profile(profile.id, form)
         return service.handle_service_response(
-            result, errors, "profile.edit_profile", "Profile updated successfully", "profile/edit.html", form
+            result,
+            errors,
+            "profile.edit_profile",
+            "Profile updated successfully",
+            "profile/edit.html",
+            form,
         )
 
     return render_template("profile/edit.html", form=form)
@@ -68,5 +77,35 @@ def send_validation_email():
         flash("Validation email sent successfully. Please check your inbox.", "success")
     except Exception as e:
         flash(f"Error sending validation email: {str(e)}", "error")
+
+    return redirect(url_for("profile.my_profile"))
+
+
+@profile_bp.route("/profile/enable_email_2fa", methods=["POST"])
+@login_required
+def enable_email_2fa():
+    if not current_user.email_validated:
+        flash("Your email is not validated.", "info")
+        return redirect(url_for("profile.my_profile"))
+
+    try:
+        email_2fa_service = Email2FAService()
+        email_2fa_service.enable_email_2fa(current_user.id)
+        flash("Email 2FA is now enabled!", "success")
+    except Exception as e:
+        flash(f"Error enabling Email 2FA for your account: {str(e)}", "error")
+
+    return redirect(url_for("profile.my_profile"))
+
+
+@profile_bp.route("/profile/disable_email_2fa", methods=["POST"])
+@login_required
+def disable_email_2fa():
+    try:
+        email_2fa_service = Email2FAService()
+        email_2fa_service.disable_email_2fa(current_user.id)
+        flash("Email 2FA has been disabled.", "success")
+    except Exception as e:
+        flash(f"Error disabling Email 2FA for your account: {str(e)}", "error")
 
     return redirect(url_for("profile.my_profile"))
