@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import BooleanField, IntegerField, PasswordField, StringField, SubmitField
-from wtforms.validators import DataRequired, Email, Length
+from wtforms import BooleanField, PasswordField, StringField, SubmitField
+from wtforms.validators import DataRequired, Email, Length, Regexp
 
 
 class SignupForm(FlaskForm):
@@ -19,9 +19,12 @@ class LoginForm(FlaskForm):
 
 
 class Email2FAVerificationForm(FlaskForm):
-    code = IntegerField(
+    code = StringField(
         "Validation code",
         validators=[
             DataRequired(),
+            Length(min=6, max=6, message="Code must be exactly 6 digits"),
+            Regexp(r"^\d{6}$", message="Code must contain only digits"),
         ],
     )
+    submit = SubmitField("Verify")
