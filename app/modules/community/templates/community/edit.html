@@ -1,0 +1,172 @@
+{% extends "base_template.html" %} {% block title %}Edit {{ community.name }}{%
+endblock %} {% block content %}
+<div class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header">
+          <h3>Edit Community: {{ community.name }}</h3>
+        </div>
+        <div class="card-body">
+          <form
+            method="POST"
+            action="{{ url_for('community.edit', community_id=community.id) }}"
+          >
+            {{ form.hidden_tag() }} {% if form.errors.general %}
+            <div class="alert alert-danger">{{ form.errors.general[0] }}</div>
+            {% endif %}
+
+            <div class="mb-3">
+              {{ form.name.label(class="form-label") }} {{
+              form.name(class="form-control" + (" is-invalid" if
+              form.name.errors else "")) }} {% if form.name.errors %}
+              <div class="invalid-feedback">{{ form.name.errors[0] }}</div>
+              {% endif %}
+            </div>
+
+            <div class="mb-3">
+              {{ form.description.label(class="form-label") }} {{
+              form.description(class="form-control", rows=5) }} {% if
+              form.description.errors %}
+              <div class="invalid-feedback d-block">
+                {{ form.description.errors[0] }}
+              </div>
+              {% endif %}
+            </div>
+
+            <div class="mb-3">
+              {{ form.logo.label(class="form-label") }} {{
+              form.logo(class="form-control" + (" is-invalid" if
+              form.logo.errors else "")) }} {% if form.logo.errors %}
+              <div class="invalid-feedback">{{ form.logo.errors[0] }}</div>
+              {% endif %}
+            </div>
+
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+              <a
+                href="{{ url_for('community.detail', community_id=community.id) }}"
+                class="btn btn-secondary"
+                >Cancel</a
+              >
+              <button type="submit" class="btn btn-primary">
+                Save Changes
+              </button>
+            </div>
+          </form>
+
+          <hr class="mt-4" />
+
+          <!-- Curators management: same fields as Authors in upload_dataset.html -->
+          <h5 class="mt-3">Curators</h5>
+
+          <div class="mb-3">
+            {% if curators %}
+            <ul class="list-unstyled">
+              {% for curator in curators %}
+              <li class="mb-2">
+                <i class="fas fa-user"></i>
+                {{ curator.user.email if curator.user else 'Unknown User' }}
+                {% if curators|length > 1 %}
+                <form method="POST" action="{{ url_for('community.remove_curator', community_id=community.id, user_id=curator.user_id) }}" class="d-inline" onsubmit="return confirm('Remove this curator?');">
+                  <button type="submit" class="btn btn-sm btn-outline-danger">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </form>
+                {% endif %}
+              </li>
+              {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-muted">No curators assigned.</p>
+            {% endif %}
+          </div>
+
+          <div class="card mt-3">
+            <div class="card-body">
+              <h6>Add curator</h6>
+
+              <div class="row" style="padding-left: 0.5rem">
+                <div class="col-lg-6 col-12 mb-3">
+                  <label class="form-label">Name *</label>
+                  <input id="curator_name" class="form-control" type="text" />
+                </div>
+
+                <div class="col-lg-6 col-12 mb-3">
+                  <label class="form-label">Affiliation</label>
+                  <input id="curator_affiliation" class="form-control" type="text" />
+                </div>
+
+                <div class="col-lg-6 col-12 mb-3">
+                  <label class="form-label">ORCID</label>
+                  <input id="curator_orcid" class="form-control" type="text" placeholder="0000-0000-0000-0000" />
+                </div>
+
+                <div class="col-12">
+                  <div class="mb-3">
+                    <div id="curator_add_error" class="text-danger" style="display:none;"></div>
+                    <button type="button" id="curator_add_btn" class="btn btn-secondary">Add curator</button>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <script>
+            (function(){
+              const btn = document.getElementById('curator_add_btn');
+              const nameInput = document.getElementById('curator_name');
+              const affiliationInput = document.getElementById('curator_affiliation');
+              const orcidInput = document.getElementById('curator_orcid');
+              const errorDiv = document.getElementById('curator_add_error');
+
+              btn.addEventListener('click', async function(){
+                errorDiv.style.display = 'none';
+                const name = nameInput.value.trim();
+                const affiliation = affiliationInput.value.trim();
+                const orcid = orcidInput.value.trim();
+
+                if (!name) {
+                  errorDiv.textContent = 'Name is required.';
+                  errorDiv.style.display = 'block';
+                  return;
+                }
+
+                btn.disabled = true;
+
+                try {
+                  // We prefer to identify user by ORCID; backend will resolve ORCID -> user
+                  const payload = new URLSearchParams();
+                  if (orcid) payload.append('orcid', orcid);
+                  payload.append('name', name);
+                  payload.append('affiliation', affiliation);
+
+                  const resp = await fetch("{{ url_for('community.add_curator', community_id=community.id) }}", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: payload.toString()
+                  });
+
+                  if (resp.ok) {
+                    window.location.reload();
+                    return;
+                  }
+
+                  const text = await resp.text();
+                  errorDiv.textContent = text || 'Failed to add curator.';
+                  errorDiv.style.display = 'block';
+                } catch (e) {
+                  errorDiv.textContent = e.toString();
+                  errorDiv.style.display = 'block';
+                } finally {
+                  btn.disabled = false;
+                }
+              });
+            })();
+          </script>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
