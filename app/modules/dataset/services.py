@@ -8,7 +8,7 @@ from typing import Optional
 from flask import request
 
 from app.modules.auth.services import AuthenticationService
-from app.modules.dataset.models import DataSet, DSMetaData, DSViewRecord
+from app.modules.dataset.models import DataSet, DSMetaData, DSViewRecord, UVLDataSet, CSVDataSet
 from app.modules.dataset.repositories import (
     AuthorRepository,
     DataSetRepository,
@@ -92,7 +92,7 @@ class DataSetService(BaseService):
     def total_dataset_views(self) -> int:
         return self.dsviewrecord_repostory.total_dataset_views()
 
-    def create_from_form(self, form, current_user) -> DataSet:
+    def create_from_form(self, form, current_user, csv_form=None) -> DataSet:
         main_author = {
             "name": f"{current_user.profile.surname}, {current_user.profile.name}",
             "affiliation": current_user.profile.affiliation,
@@ -105,7 +105,26 @@ class DataSetService(BaseService):
                 author = self.author_repository.create(commit=False, ds_meta_data_id=dsmetadata.id, **author_data)
                 dsmetadata.authors.append(author)
 
-            dataset = self.create(commit=False, user_id=current_user.id, ds_meta_data_id=dsmetadata.id)
+            # Create the appropriate DataSet subclass depending on dataset_type
+            dataset_type = getattr(form, "dataset_type", None)
+            selected_type = dataset_type.data if dataset_type is not None else "uvl"
+
+            if selected_type == "csv":
+                dataset = CSVDataSet(user_id=current_user.id, ds_meta_data_id=dsmetadata.id)
+                # try to read csv-specific fields from csv_form if provided
+                if csv_form is not None:
+                    dataset.has_header = csv_form.has_header.data
+                    dataset.delimiter = csv_form.delimiter.data
+                else:
+                    # fallback to request.form values if csv_form not passed
+                    dataset.has_header = request.form.get("has_header", "y") in ["y", "true", "True", "on", "1"]
+                    dataset.delimiter = request.form.get("delimiter", ",")
+            else:
+                dataset = UVLDataSet(user_id=current_user.id, ds_meta_data_id=dsmetadata.id)
+
+            # add dataset to session and flush to get dataset.id for related records
+            self.repository.session.add(dataset)
+            self.repository.session.flush()
 
             for feature_model in form.feature_models:
                 uvl_filename = feature_model.uvl_filename.data

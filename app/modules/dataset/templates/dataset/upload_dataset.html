@@ -47,7 +47,16 @@
                         <h1 class="h3 mb-3">Basic info</h1>
 
                         <div class="row" style="padding-left: 2rem">
-
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    {{ form.dataset_type.label(class="form-label") }}
+                                    <select name="dataset_type" id="dataset_type_select" class="form-control" >
+                                        <option value="uvl" {% if dataset_type == 'uvl' %}selected{% endif %}>UVL</option>
+                                        <option value="csv" {% if dataset_type == 'csv' %}selected{% endif %}>CSV</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
                             <div class="col-lg-6 col-xs-12 col-md-12">
                                 <div class="mb-3">
                                     {{ form.title.label(class="form-label") }} *
@@ -85,7 +94,27 @@
                                     {% endfor %}
                                 </div>
                             </div>
-
+                            
+                            <div class="col-6 csv-only">
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        {{ csv_form.has_header(class="form-check-input") }}
+                                        {{ csv_form.has_header.label(class="form-check-label") }}
+                                        {% for error in csv_form.has_header.errors %}
+                                            <span style="color: red;">{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6 csv-only">
+                                <div class="mb-3">
+                                    {{ csv_form.delimiter.label(class="form-label") }}
+                                    {{ csv_form.delimiter(class="form-control") }}
+                                    {% for error in csv_form.delimiter.errors %}
+                                        <span style="color: red;">{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
                             <div class="col-6">
                                 <div class="mb-3">
                                     {{ form.tags.label(class="form-label") }}
@@ -95,7 +124,7 @@
                                     {% endfor %}
                                 </div>
                             </div>
-
+                            
                         </div>
 
                         <h1 class="h3 mb-3 mt-4">
@@ -111,9 +140,9 @@
                             <div class="modal-content">
                               <div class="modal-header">
                                 <h5 class="modal-title" id="infoModalLabel">Información Importante</h5>
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <div type="button" class="close" data-dismiss="modal" aria-label="Close">
                                   <span aria-hidden="true">&times;</span>
-                                </button>
+                                </div>
                               </div>
                               <div class="modal-body">
                                 ¡Cuidado! Los autores no se pueden editar una vez que el dataset se haya subido a UVLHub. Esta funcionalidad estará disponible para futuras versiones.
@@ -232,7 +261,7 @@
                         url: "/dataset/file/upload",
                         paramName: 'file',
                         maxFilesize: 10,
-                        acceptedFiles: '.uvl',
+                        acceptedFiles: '.uvl,.csv',
                         init: function () {
 
                             let fileList = document.getElementById('file-list');
@@ -242,7 +271,7 @@
                             this.on('addedfile', function (file) {
 
                                 let ext = file.name.split('.').pop();
-                                if (ext !== 'uvl') {
+                                if (ext !== 'uvl' && ext !== 'csv') {
                                     this.removeFile(file);
 
                                     let alert = document.createElement('p');
@@ -356,7 +385,7 @@
                                     <div class="row">
                                         <input type="hidden" value="${response.filename}" name="feature_models-${formUniqueId}-uvl_filename">
                                         <div class="col-12">
-                                            <div class="row">
+                                            <input class="row">
                                                 <div class="col-12">
                                                     <div class="mb-3">
                                                         <label class="form-label">Title</label>
@@ -421,7 +450,7 @@
                                                         <button type="button" class="add_author_to_uvl btn btn-secondary" id="` + formContainer.id + `_authors_button">Add author</button>
                                                     </div>
                                                 </div>
-                                            </div>
+                                            </input>
                                         </div>
                                     </div>
                                     `;
@@ -529,4 +558,29 @@
 {% block scripts %}
     <script src="{{ url_for('zenodo.scripts') }}"></script>
     <script src="{{ url_for('dataset.scripts') }}"></script>
+    <script>
+
+        function toggleCsvVisibility(sel) {
+            const elements = document.getElementsByClassName('csv-only');
+            if (sel.value === 'csv') {
+                for (let i = 0; i < elements.length; i++) {
+                    elements[i].style.display = 'block';
+                }
+            } else {
+                for (let i = 0; i < elements.length; i++) {
+                    elements[i].style.display = 'none';
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const sel = document.getElementById('dataset_type_select');
+            if (!sel) return;
+            sel.addEventListener('change', function() {
+                toggleCsvVisibility(sel);
+            });
+            toggleCsvVisibility(sel);
+        });
+
+    </script>
 {% endblock %}

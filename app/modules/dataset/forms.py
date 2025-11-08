@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import FieldList, FormField, SelectField, StringField, SubmitField, TextAreaField
+from wtforms import BooleanField, FieldList, FormField, SelectField, StringField, SubmitField, TextAreaField
 from wtforms.validators import URL, DataRequired, Optional
 
 from app.modules.dataset.models import PublicationType
@@ -55,6 +55,12 @@ class FeatureModelForm(FlaskForm):
 
 
 class DataSetForm(FlaskForm):
+    dataset_type = SelectField(
+        "Dataset type",
+        choices=[("uvl", "UVL"), ("csv", "CSV")],
+        validators=[DataRequired()],
+        default="uvl"
+    )
     title = StringField("Title", validators=[DataRequired()])
     desc = TextAreaField("Description", validators=[DataRequired()])
     publication_type = SelectField(
@@ -94,3 +100,21 @@ class DataSetForm(FlaskForm):
 
     def get_feature_models(self):
         return [fm.get_feature_model() for fm in self.feature_models]
+
+
+class CSVDataSetForm(DataSetForm):
+    has_header = BooleanField("Has Header", default=True)
+    delimiter = StringField("Delimiter", default=",")
+
+    def get_dsmetadata(self):
+        publication_type_converted = self.convert_publication_type(self.publication_type.data)
+        return {
+            "title": self.title.data,
+            "description": self.desc.data,
+            "publication_type": publication_type_converted,
+            "publication_doi": self.publication_doi.data,
+            "dataset_doi": self.dataset_doi.data,
+            "tags": self.tags.data,
+            "has_header": self.has_header.data,
+            "delimiter": self.delimiter.data,
+        }

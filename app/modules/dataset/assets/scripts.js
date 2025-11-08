@@ -158,7 +158,7 @@ var currentId = 0;
                     let formDataJson = JSON.stringify(formData);
                     console.log(formDataJson);
 
-                    const csrfToken = document.getElementById('csrf_token').value;
+                    const csrfToken = document.querySelector('input[name="csrf_token"]').value;
                     const formUploadData = new FormData();
                     formUploadData.append('csrf_token', csrfToken);
 
