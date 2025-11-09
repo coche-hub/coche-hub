@@ -4,6 +4,7 @@ from wtforms.validators import DataRequired, Length, Optional
 
 
 class CommunityForm(FlaskForm):
+
     name = StringField(
         "Name",
         validators=[
