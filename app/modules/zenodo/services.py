@@ -20,18 +20,26 @@ load_dotenv()
 class ZenodoService(BaseService):
 
     def get_zenodo_url(self):
+        """
+        Resolve the Zenodo API URL. If a FAKENODO_URL is provided it takes precedence
+        (so developers can point the service to the local fake server).
+
+        Returns:
+            str: base URL for the depositions endpoint
+        """
+
+        # If developer configured a local fake Zenodo server, prefer it
+        fakenodo = os.getenv("FAKENODO_URL")
+        if fakenodo:
+            return fakenodo.rstrip("/") + "/api/deposit/depositions"
 
         FLASK_ENV = os.getenv("FLASK_ENV", "development")
-        ZENODO_API_URL = ""
-
         if FLASK_ENV == "development":
-            ZENODO_API_URL = os.getenv("ZENODO_API_URL", "https://sandbox.zenodo.org/api/deposit/depositions")
+            return os.getenv("ZENODO_API_URL", "https://sandbox.zenodo.org/api/deposit/depositions")
         elif FLASK_ENV == "production":
-            ZENODO_API_URL = os.getenv("ZENODO_API_URL", "https://zenodo.org/api/deposit/depositions")
+            return os.getenv("ZENODO_API_URL", "https://zenodo.org/api/deposit/depositions")
         else:
-            ZENODO_API_URL = os.getenv("ZENODO_API_URL", "https://sandbox.zenodo.org/api/deposit/depositions")
-
-        return ZENODO_API_URL
+            return os.getenv("ZENODO_API_URL", "https://sandbox.zenodo.org/api/deposit/depositions")
 
     def get_zenodo_access_token(self):
         return os.getenv("ZENODO_ACCESS_TOKEN")
