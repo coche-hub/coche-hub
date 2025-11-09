@@ -1,13 +1,11 @@
 import json
 import os
-import time
 from datetime import datetime
-from typing import Dict, Any
+from typing import Any, Dict
 
-from flask import request, jsonify
+from flask import jsonify, request
 
 from app.modules.fakenodo import fakenodo_bp
-
 
 WORKING_DIR = os.getenv("WORKING_DIR") or os.getcwd()
 STORAGE_PATH = os.path.join(WORKING_DIR, "app", "modules", "fakenodo", "storage.json")

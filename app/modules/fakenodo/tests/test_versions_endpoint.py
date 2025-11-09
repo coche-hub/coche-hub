@@ -1,6 +1,5 @@
 import io
 import os
-import json
 
 from app import create_app
 
@@ -34,7 +33,9 @@ def test_versions_endpoint_creates_and_lists_versions():
 
     app.config.update({"TESTING": True})
 
-    storage_path = os.path.join(os.environ.get("WORKING_DIR", os.getcwd()), "app", "modules", "fakenodo", "storage.json")
+    storage_path = os.path.join(
+        os.environ.get("WORKING_DIR", os.getcwd()), "app", "modules", "fakenodo", "storage.json"
+    )
     # ensure clean state
     if os.path.exists(storage_path):
         os.remove(storage_path)
@@ -51,7 +52,9 @@ def test_versions_endpoint_creates_and_lists_versions():
 
         # upload a file
         data = {"file": (io.BytesIO(b"hello"), "a.txt"), "name": "a.txt"}
-        rv = client.post(f"/fakenodo/api/deposit/depositions/{dep_id}/files", data=data, content_type="multipart/form-data")
+        rv = client.post(
+            f"/fakenodo/api/deposit/depositions/{dep_id}/files", data=data, content_type="multipart/form-data"
+        )
         assert rv.status_code == 201
 
         # publish -> creates version 1
@@ -70,7 +73,9 @@ def test_versions_endpoint_creates_and_lists_versions():
 
         # upload another file and publish -> creates version 2
         data = {"file": (io.BytesIO(b"world"), "b.txt"), "name": "b.txt"}
-        rv = client.post(f"/fakenodo/api/deposit/depositions/{dep_id}/files", data=data, content_type="multipart/form-data")
+        rv = client.post(
+            f"/fakenodo/api/deposit/depositions/{dep_id}/files", data=data, content_type="multipart/form-data"
+        )
         assert rv.status_code == 201
 
         rv = client.post(f"/fakenodo/api/deposit/depositions/{dep_id}/actions/publish")
