@@ -58,3 +58,4 @@ ubuntu-bionic-18.04-cloudimg-console.log
 
 # Fakenodo storage
 app/modules/fakenodo/storage.json
+app/modules/fakenodo/files
