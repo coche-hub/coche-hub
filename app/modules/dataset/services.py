@@ -152,6 +152,172 @@ class DataSetService(BaseService):
             raise exc
         return dataset
 
+    def create_new_version(self, dataset: DataSet, form, current_user, csv_form=None) -> DataSet:
+        """
+        Create a new version of an existing dataset with updated metadata and files.
+        The new version will include existing files plus any newly uploaded files.
+        """
+        main_author = {
+            "name": f"{current_user.profile.surname}, {current_user.profile.name}",
+            "affiliation": current_user.profile.affiliation,
+            "orcid": current_user.profile.orcid,
+        }
+        try:
+            logger.info(f"Creating new version of dataset {dataset.id}...")
+            
+            # Create new metadata for the new version
+            dsmetadata = self.dsmetadata_repository.create(**form.get_dsmetadata())
+            
+            # Copy authors from original dataset
+            for author in dataset.ds_meta_data.authors:
+                new_author = self.author_repository.create(
+                    commit=False,
+                    ds_meta_data_id=dsmetadata.id,
+                    name=author.name,
+                    affiliation=author.affiliation,
+                    orcid=author.orcid
+                )
+                dsmetadata.authors.append(new_author)
+            
+            # Determine dataset type
+            dataset_type = dataset.get_dataset_type()
+            is_csv = dataset_type == 'csv_data_set'
+            
+            # Create the new dataset with incremented version
+            if is_csv:
+                new_dataset = CSVDataSet(
+                    user_id=current_user.id,
+                    ds_meta_data_id=dsmetadata.id,
+                    version=dataset.version + 1
+                )
+                if csv_form is not None:
+                    new_dataset.has_header = csv_form.has_header.data
+                    new_dataset.delimiter = csv_form.delimiter.data
+                else:
+                    new_dataset.has_header = dataset.has_header
+                    new_dataset.delimiter = dataset.delimiter
+            else:
+                new_dataset = UVLDataSet(
+                    user_id=current_user.id,
+                    ds_meta_data_id=dsmetadata.id,
+                    version=dataset.version + 1
+                )
+            
+            self.repository.session.add(new_dataset)
+            self.repository.session.flush()
+            
+            # Copy existing files from the old dataset to the new dataset location
+            working_dir = os.getenv("WORKING_DIR", "")
+            old_dataset_dir = os.path.join(working_dir, "uploads", f"user_{dataset.user_id}", f"dataset_{dataset.id}")
+            new_dataset_dir = os.path.join(working_dir, "uploads", f"user_{current_user.id}", f"dataset_{new_dataset.id}")
+            
+            os.makedirs(new_dataset_dir, exist_ok=True)
+            
+            # Copy existing feature models and files
+            for old_fm in dataset.feature_models:
+                # Create new FMMetaData
+                new_fmmetadata = self.fmmetadata_repository.create(
+                    commit=False,
+                    uvl_filename=old_fm.fm_meta_data.uvl_filename,
+                    title=old_fm.fm_meta_data.title,
+                    description=old_fm.fm_meta_data.description,
+                    publication_type=old_fm.fm_meta_data.publication_type.name,
+                    publication_doi=old_fm.fm_meta_data.publication_doi,
+                    tags=old_fm.fm_meta_data.tags,
+                    uvl_version=old_fm.fm_meta_data.uvl_version
+                )
+                
+                # Copy authors
+                for author in old_fm.fm_meta_data.authors:
+                    new_author = self.author_repository.create(
+                        commit=False,
+                        fm_meta_data_id=new_fmmetadata.id,
+                        name=author.name,
+                        affiliation=author.affiliation,
+                        orcid=author.orcid
+                    )
+                    new_fmmetadata.authors.append(new_author)
+                
+                # Create new feature model
+                new_fm = self.feature_model_repository.create(
+                    commit=False,
+                    data_set_id=new_dataset.id,
+                    fm_meta_data_id=new_fmmetadata.id
+                )
+                
+                # Copy files
+                for old_file in old_fm.files:
+                    # Copy physical file
+                    old_file_path = os.path.join(old_dataset_dir, old_file.name)
+                    new_file_path = os.path.join(new_dataset_dir, old_file.name)
+                    
+                    if os.path.exists(old_file_path):
+                        shutil.copy2(old_file_path, new_file_path)
+                        
+                        # Create new file record
+                        new_file = self.hubfilerepository.create(
+                            commit=False,
+                            name=old_file.name,
+                            checksum=old_file.checksum,
+                            size=old_file.size,
+                            feature_model_id=new_fm.id
+                        )
+                        new_fm.files.append(new_file)
+            
+            # Add new uploaded files from temp folder
+            temp_folder = current_user.temp_folder()
+            if os.path.exists(temp_folder):
+                temp_files = os.listdir(temp_folder)
+                for filename in temp_files:
+                    file_path = os.path.join(temp_folder, filename)
+                    if os.path.isfile(file_path):
+                        # Create simple metadata for new files
+                        new_fmmetadata = self.fmmetadata_repository.create(
+                            commit=False,
+                            uvl_filename=filename,
+                            title=filename.rsplit('.', 1)[0],
+                            description="Added in version update",
+                            publication_type="NONE",
+                            publication_doi="",
+                            tags="",
+                            uvl_version=""
+                        )
+                        
+                        new_fm = self.feature_model_repository.create(
+                            commit=False,
+                            data_set_id=new_dataset.id,
+                            fm_meta_data_id=new_fmmetadata.id
+                        )
+                        
+                        checksum, size = calculate_checksum_and_size(file_path)
+                        new_file = self.hubfilerepository.create(
+                            commit=False,
+                            name=filename,
+                            checksum=checksum,
+                            size=size,
+                            feature_model_id=new_fm.id
+                        )
+                        new_fm.files.append(new_file)
+                        
+                        # Move the file from temp folder to new dataset directory
+                        # Only if it doesn't already exist in the destination
+                        new_file_destination = os.path.join(new_dataset_dir, filename)
+                        if not os.path.exists(new_file_destination):
+                            shutil.move(file_path, new_file_destination)
+                        else:
+                            # File already exists, just remove from temp
+                            os.remove(file_path)
+            
+            self.repository.session.commit()
+            logger.info(f"Successfully created new version: {new_dataset.id} with version {new_dataset.version}")
+            
+        except Exception as exc:
+            logger.error(f"Exception creating new version of dataset: {exc}")
+            self.repository.session.rollback()
+            raise exc
+        
+        return new_dataset
+
     def update_dsmetadata(self, id, **kwargs):
         return self.dsmetadata_repository.update(id, **kwargs)
 

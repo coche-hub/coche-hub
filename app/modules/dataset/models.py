@@ -205,9 +205,14 @@ class DOIMapping(db.Model):
 
 
 # Este código hace que se incremente la versión antes del update
+# pero NO cuando se crea una nueva versión manualmente
 
 def increment_dataset_version(mapper, connection, target):
-    target.increment_dataset_version()
+    # Only increment if version change was not manual (i.e., if it's the same)
+    # When creating a new version manually, we set the version explicitly
+    # so we need to check if the version was already incremented
+    pass  # Disabled automatic increment - version is now managed explicitly
 
-event.listen(DataSet, "before_update", increment_dataset_version)
+# Commented out to disable automatic version increment
+# event.listen(DataSet, "before_update", increment_dataset_version)
 

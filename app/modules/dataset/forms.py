@@ -107,6 +107,8 @@ class CSVDataSetForm(DataSetForm):
     delimiter = StringField("Delimiter", default=",")
 
     def get_dsmetadata(self):
+        # CSV-specific fields (has_header, delimiter) are NOT part of DSMetaData
+        # They belong to CSVDataSet model and should be handled separately
         publication_type_converted = self.convert_publication_type(self.publication_type.data)
         return {
             "title": self.title.data,
@@ -115,6 +117,60 @@ class CSVDataSetForm(DataSetForm):
             "publication_doi": self.publication_doi.data,
             "dataset_doi": self.dataset_doi.data,
             "tags": self.tags.data,
-            "has_header": self.has_header.data,
-            "delimiter": self.delimiter.data,
+        }
+
+
+class EditDataSetForm(FlaskForm):
+    dataset_type = SelectField(
+        "Dataset type",
+        choices=[("uvl", "UVL"), ("csv", "CSV")],
+        validators=[DataRequired()],
+        default="uvl"
+    )
+    title = StringField("Title", validators=[DataRequired()])
+    desc = TextAreaField("Description", validators=[DataRequired()])
+    publication_type = SelectField(
+        "Publication type",
+        choices=[(pt.value, pt.name.replace("_", " ").title()) for pt in PublicationType],
+        validators=[DataRequired()],
+    )
+    publication_doi = StringField("Publication DOI", validators=[Optional(), URL()])
+    dataset_doi = StringField("Dataset DOI", validators=[Optional(), URL()])
+    tags = StringField("Tags (separated by commas)")
+
+    submit = SubmitField("Submit")
+
+    def get_dsmetadata(self):
+        publication_type_converted = self.convert_publication_type(self.publication_type.data)
+        return {
+            "title": self.title.data,
+            "description": self.desc.data,
+            "publication_type": publication_type_converted,
+            "publication_doi": self.publication_doi.data,
+            "dataset_doi": self.dataset_doi.data,
+            "tags": self.tags.data,
+        }
+
+    def convert_publication_type(self, value):
+        for pt in PublicationType:
+            if pt.value == value:
+                return pt.name
+        return "NONE"
+
+
+class EditCSVDataSetForm(EditDataSetForm):
+    has_header = BooleanField("Has Header", default=True)
+    delimiter = StringField("Delimiter", default=",")
+
+    def get_dsmetadata(self):
+        # CSV-specific fields (has_header, delimiter) are NOT part of DSMetaData
+        # They belong to CSVDataSet model and should be handled separately
+        publication_type_converted = self.convert_publication_type(self.publication_type.data)
+        return {
+            "title": self.title.data,
+            "description": self.desc.data,
+            "publication_type": publication_type_converted,
+            "publication_doi": self.publication_doi.data,
+            "dataset_doi": self.dataset_doi.data,
+            "tags": self.tags.data,
         }
