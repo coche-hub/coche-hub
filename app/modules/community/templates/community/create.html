@@ -1,0 +1,217 @@
+{% extends "base_template.html" %} {% block title %}Create Community{% endblock
+%} {% block content %}
+<div class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header">
+          <h3>Create New Community</h3>
+        </div>
+        <div class="card-body">
+          <form method="POST" action="{{ url_for('community.create') }}">
+            {{ form.hidden_tag() }} {% if form.errors.general %}
+            <div class="alert alert-danger">{{ form.errors.general[0] }}</div>
+            {% endif %}
+
+            <div class="mb-3">
+              {{ form.name.label(class="form-label") }} {{
+              form.name(class="form-control" + (" is-invalid" if
+              form.name.errors else "")) }} {% if form.name.errors %}
+              <div class="invalid-feedback">{{ form.name.errors[0] }}</div>
+              {% endif %}
+            </div>
+
+            <div class="mb-3">
+              {{ form.description.label(class="form-label") }} {{
+              form.description(class="form-control", rows=5) }} {% if
+              form.description.errors %}
+              <div class="invalid-feedback d-block">
+                {{ form.description.errors[0] }}
+              </div>
+              {% endif %}
+              <small class="form-text text-muted"
+                >Describe the purpose and scope of this community.</small
+              >
+            </div>
+
+            <div class="mb-3">
+              {{ form.logo.label(class="form-label") }} {{
+              form.logo(class="form-control" + (" is-invalid" if
+              form.logo.errors else "")) }} {% if form.logo.errors %}
+              <div class="invalid-feedback">{{ form.logo.errors[0] }}</div>
+              {% endif %}
+              <small class="form-text text-muted"
+                >URL of the community logo image (optional).</small
+              >
+            </div>
+
+            <hr />
+
+            <!-- Curators: allow adding curators at creation time (same fields as Authors) -->
+            <div class="card mb-3">
+              <div class="card-body">
+                <h5 class="card-title">Curators</h5>
+
+                <div
+                  id="curators_error"
+                  class="text-danger"
+                  style="display: none"
+                ></div>
+
+                <div class="row g-2 align-items-end">
+                  <div class="col-lg-5 col-12">
+                    <label class="form-label">Name *</label>
+                    <input
+                      id="new_curator_name"
+                      class="form-control"
+                      type="text"
+                    />
+                  </div>
+                  <div class="col-lg-4 col-12">
+                    <label class="form-label">Affiliation</label>
+                    <input
+                      id="new_curator_affiliation"
+                      class="form-control"
+                      type="text"
+                    />
+                  </div>
+                  <div class="col-lg-3 col-12">
+                    <label class="form-label">ORCID</label>
+                    <input
+                      id="new_curator_orcid"
+                      class="form-control"
+                      type="text"
+                      placeholder="0000-0000-0000-0000"
+                    />
+                  </div>
+                </div>
+
+                <div class="mt-2">
+                  <button
+                    type="button"
+                    id="add_curator_to_list"
+                    class="btn btn-secondary btn-sm"
+                  >
+                    Add curator
+                  </button>
+                </div>
+
+                <ul id="curators_list" class="mt-3 list-unstyled"></ul>
+
+                <!-- Hidden container where we append inputs so they are submitted with the form -->
+                <div id="curators_hidden_container"></div>
+              </div>
+            </div>
+
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+              <a
+                href="{{ url_for('community.index') }}"
+                class="btn btn-secondary"
+              >
+                Cancel
+              </a>
+              {{ form.submit(class="btn btn-primary") }}
+            </div>
+          </form>
+
+          <script>
+            (function(){
+              const addBtn = document.getElementById('add_curator_to_list');
+              const nameInput = document.getElementById('new_curator_name');
+              const affInput = document.getElementById('new_curator_affiliation');
+              const orcidInput = document.getElementById('new_curator_orcid');
+              const list = document.getElementById('curators_list');
+              const hidden = document.getElementById('curators_hidden_container');
+              const err = document.getElementById('curators_error');
+
+              function normalizeOrcid(v){ return v.replace(/\s+/g,''); }
+
+              addBtn.addEventListener('click', function(){
+                err.style.display = 'none';
+                const name = nameInput.value.trim();
+                const affiliation = affInput.value.trim();
+                const orcid = normalizeOrcid(orcidInput.value.trim());
+
+                if(!name){
+                  err.textContent = 'Name is required for curator.';
+                  err.style.display = 'block';
+                  return;
+                }
+
+                // prevent duplicates by ORCID (if provided) or by name
+                const existingByOrcid = orcid && Array.from(hidden.querySelectorAll('input[name="curator_orcid"]')).some(i => i.value === orcid);
+                const existingByName = Array.from(hidden.querySelectorAll('input[name="curator_name"]')).some(i => i.value === name);
+                if(existingByOrcid || existingByName){
+                  err.textContent = 'Curator already added.';
+                  err.style.display = 'block';
+                  return;
+                }
+
+                // create visible list item
+                const li = document.createElement('li');
+                li.className = 'mb-2';
+                li.textContent = `${name} — ${affiliation ? affiliation + ' — ' : ''}${orcid}`;
+
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'btn btn-sm btn-outline-danger ms-2';
+                removeBtn.textContent = 'Remove';
+                li.appendChild(removeBtn);
+
+                // create hidden inputs
+                const h_name = document.createElement('input'); h_name.type = 'hidden'; h_name.name = 'curator_name'; h_name.value = name;
+                const h_aff = document.createElement('input'); h_aff.type = 'hidden'; h_aff.name = 'curator_affiliation'; h_aff.value = affiliation;
+                const h_orc = document.createElement('input'); h_orc.type = 'hidden'; h_orc.name = 'curator_orcid'; h_orc.value = orcid;
+
+                // attach references for removal
+                li._hiddenInputs = [h_name, h_aff, h_orc];
+
+                removeBtn.addEventListener('click', function(){
+                  // remove visible and hidden
+                  list.removeChild(li);
+                  h_name.remove(); h_aff.remove(); h_orc.remove();
+                });
+
+                list.appendChild(li);
+                hidden.appendChild(h_name); hidden.appendChild(h_aff); hidden.appendChild(h_orc);
+
+                // clear inputs
+                nameInput.value = '';
+                affInput.value = '';
+                orcidInput.value = '';
+              });
+
+              // On submit, if the visible inputs have values but user didn't click Add,
+              // add them to the hidden container so they are submitted. Also remove any
+              // accidental user_id inputs to prevent sending numeric user IDs.
+              const form = document.querySelector('form[action="{{ url_for('community.create') }}"]');
+              if(form){
+                form.addEventListener('submit', function(e){
+                  // remove attacker/legacy user_id fields
+                  Array.from(form.querySelectorAll('input[name="user_id"]')).forEach(i => i.remove());
+
+                  const vname = nameInput.value.trim();
+                  const vaff = affInput.value.trim();
+                  const vorc = normalizeOrcid(orcidInput.value.trim());
+                  if(vname || vaff || vorc){
+                    // prevent duplicate
+                    const existingByOrcid = vorc && Array.from(hidden.querySelectorAll('input[name="curator_orcid"]')).some(i => i.value === vorc);
+                    const existingByName = vname && Array.from(hidden.querySelectorAll('input[name="curator_name"]')).some(i => i.value === vname);
+                    if(!(existingByOrcid || existingByName)){
+                      // create hidden inputs same as Add button
+                      const h_name = document.createElement('input'); h_name.type = 'hidden'; h_name.name = 'curator_name'; h_name.value = (vname || '');
+                      const h_aff = document.createElement('input'); h_aff.type = 'hidden'; h_aff.name = 'curator_affiliation'; h_aff.value = (vaff || '');
+                      const h_orc = document.createElement('input'); h_orc.type = 'hidden'; h_orc.name = 'curator_orcid'; h_orc.value = (vorc || '');
+                      hidden.appendChild(h_name); hidden.appendChild(h_aff); hidden.appendChild(h_orc);
+                    }
+                  }
+                });
+              }
+            })();
+          </script>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

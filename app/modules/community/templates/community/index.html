@@ -1,0 +1,57 @@
+{% extends "base_template.html" %} {% block title %}Communities{% endblock %} {%
+block content %}
+<div class="container mt-4">
+  <div class="row mb-4">
+    <div class="col-md-8">
+      <h1>Communities</h1>
+      <p class="text-muted">Explore thematic and institutional spaces</p>
+    </div>
+    <div class="col-md-4 text-end">
+      {% if current_user.is_authenticated %}
+      <a href="{{ url_for('community.create') }}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Create Community
+      </a>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if communities %}
+  <div class="row">
+    {% for community in communities %}
+    <div class="col-md-4 mb-4">
+      <div class="card h-100">
+        {% if community.logo %}
+        <img
+          src="{{ community.logo }}"
+          class="card-img-top"
+          alt="{{ community.name }}"
+        />
+        {% endif %}
+        <div class="card-body">
+          <h5 class="card-title">{{ community.name }}</h5>
+          <p class="card-text">
+            {{ community.description[:150] }}{% if community.description|length
+            > 150 %}...{% endif %}
+          </p>
+          <a
+            href="{{ url_for('community.detail', community_id=community.id) }}"
+            class="btn btn-sm btn-outline-primary"
+          >
+            View Details
+          </a>
+        </div>
+        <div class="card-footer text-muted small">
+          Created {{ community.created_at.strftime('%Y-%m-%d') }}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="alert alert-info">
+    <i class="fas fa-info-circle"></i> No communities found. Be the first to
+    create one!
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
