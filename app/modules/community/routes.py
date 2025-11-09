@@ -5,22 +5,22 @@ from app.modules.profile.models import UserProfile
 from app.modules.auth.models import User
 from app.modules.community.forms import CommunityForm
 
-community_bp = Blueprint('community', __name__, template_folder='templates')
+community_bp = Blueprint("community", __name__, template_folder="templates")
 
 
-@community_bp.route('/community', methods=['GET'])
+@community_bp.route("/community", methods=["GET"])
 def index():
     service = CommunityService()
     communities = service.get_all_communities()
-    return render_template('community/index.html', communities=communities)
+    return render_template("community/index.html", communities=communities)
 
 
-@community_bp.route('/community/create', methods=['GET', 'POST'])
+@community_bp.route("/community/create", methods=["GET", "POST"])
 @login_required
 def create():
     form = CommunityForm()
 
-    if request.method == 'POST':
+    if request.method == "POST":
         print("=" * 50)
         print("POST REQUEST RECEIVED")
         print(f"Form data: {request.form}")
@@ -37,12 +37,12 @@ def create():
                     name=form.name.data,
                     description=form.description.data,
                     creator_id=current_user.id,
-                    logo=form.logo.data if form.logo.data else None
+                    logo=form.logo.data if form.logo.data else None,
                 )
                 print(f"Community created successfully with ID: {community.id}")
-                curator_names = request.form.getlist('curator_name')
-                curator_affs = request.form.getlist('curator_affiliation')
-                curator_orcids = request.form.getlist('curator_orcid')
+                curator_names = request.form.getlist("curator_name")
+                curator_affs = request.form.getlist("curator_affiliation")
+                curator_orcids = request.form.getlist("curator_orcid")
 
                 try:
                     max_len = 0
@@ -51,8 +51,8 @@ def create():
 
                     unresolved = []
                     for i in range(max_len):
-                        name = (curator_names[i].strip() if i < len(curator_names) else '')
-                        orcid = (curator_orcids[i].strip() if i < len(curator_orcids) else '')
+                        name = curator_names[i].strip() if i < len(curator_names) else ""
+                        orcid = curator_orcids[i].strip() if i < len(curator_orcids) else ""
 
                         profile = None
                         if orcid:
@@ -61,11 +61,12 @@ def create():
                             name_query = f"%{name}%"
                             try:
                                 from sqlalchemy import func
-                                concat_field = func.concat(UserProfile.name, ' ', UserProfile.surname)
+
+                                concat_field = func.concat(UserProfile.name, " ", UserProfile.surname)
                                 profile = UserProfile.query.filter(
-                                    (UserProfile.name.ilike(name_query)) |
-                                    (UserProfile.surname.ilike(name_query)) |
-                                    (concat_field.ilike(name_query))
+                                    (UserProfile.name.ilike(name_query))
+                                    | (UserProfile.surname.ilike(name_query))
+                                    | (concat_field.ilike(name_query))
                                 ).first()
                             except Exception:
                                 profile = UserProfile.query.filter(
@@ -76,39 +77,42 @@ def create():
                             if not service.is_curator(profile.user_id, community.id):
                                 service.add_curator(community.id, profile.user_id, current_user.id)
                         else:
-                            unresolved.append(orcid or name or '<unknown>')
+                            unresolved.append(orcid or name or "<unknown>")
                     if unresolved:
-                        msg = 'Some curators could not be resolved and were not added: '
-                        msg += ', '.join(unresolved)
-                        flash(msg, 'warning')
+                        msg = "Some curators could not be resolved and were not added: "
+                        msg += ", ".join(unresolved)
+                        flash(msg, "warning")
                 except Exception as e:
                     try:
                         service.delete_community(community.id)
                     except Exception:
                         pass
                     from app import db
-                    db.session.rollback()
-                    form.errors['general'] = [str(e)]
-                    return render_template('community/create.html', form=form)
 
-                return redirect(url_for('community.detail', community_id=community.id))
+                    db.session.rollback()
+                    form.errors["general"] = [str(e)]
+                    return render_template("community/create.html", form=form)
+
+                return redirect(url_for("community.detail", community_id=community.id))
 
             except Exception as e:
                 from app import db
+
                 db.session.rollback()
                 print(f"ERROR creating community: {str(e)}")
                 import traceback
+
                 traceback.print_exc()
 
-                form.errors['general'] = [str(e)]
+                form.errors["general"] = [str(e)]
         else:
             print("FORM VALIDATION FAILED!")
             print(f"Errors: {form.errors}")
 
-    return render_template('community/create.html', form=form)
+    return render_template("community/create.html", form=form)
 
 
-@community_bp.route('/community/<int:community_id>', methods=['GET'])
+@community_bp.route("/community/<int:community_id>", methods=["GET"])
 def detail(community_id):
     service = CommunityService()
     community = service.get_by_id(community_id)
@@ -119,14 +123,10 @@ def detail(community_id):
     curators = service.get_community_curators(community_id)
     is_curator = current_user.is_authenticated and service.is_curator(current_user.id, community_id)
 
-    return render_template(
-        'community/detail.html',
-        community=community,
-        curators=curators,
-        is_curator=is_curator)
+    return render_template("community/detail.html", community=community, curators=curators, is_curator=is_curator)
 
 
-@community_bp.route('/community/<int:community_id>/edit', methods=['GET', 'POST'])
+@community_bp.route("/community/<int:community_id>/edit", methods=["GET", "POST"])
 @login_required
 def edit(community_id):
     service = CommunityService()
@@ -143,38 +143,37 @@ def edit(community_id):
     curators = service.get_community_curators(community_id)
     curators_data = []
     for c in curators:
-        u = getattr(c, 'user', None)
+        u = getattr(c, "user", None)
         profile = None
         if u:
-            profile = UserProfile.query.filter_by(user_id=getattr(u, 'id', None)).first()
-        curators_data.append({
-            'user': {
-                'name': getattr(profile, 'name', None) if profile else getattr(u, 'email', None),
-                'email': getattr(u, 'email', None),
-                'orcid': getattr(profile, 'orcid', None) if profile else None
+            profile = UserProfile.query.filter_by(user_id=getattr(u, "id", None)).first()
+        curators_data.append(
+            {
+                "user": {
+                    "name": getattr(profile, "name", None) if profile else getattr(u, "email", None),
+                    "email": getattr(u, "email", None),
+                    "orcid": getattr(profile, "orcid", None) if profile else None,
+                }
             }
-        })
+        )
 
-    if request.method == 'POST' and form.validate_on_submit():
+    if request.method == "POST" and form.validate_on_submit():
         try:
             service.update_community(
-                community_id=community_id,
-                name=form.name.data,
-                description=form.description.data,
-                logo=form.logo.data
+                community_id=community_id, name=form.name.data, description=form.description.data, logo=form.logo.data
             )
 
-            curator_names = request.form.getlist('curator_name')
-            curator_affs = request.form.getlist('curator_affiliation')
-            curator_orcids = request.form.getlist('curator_orcid')
+            curator_names = request.form.getlist("curator_name")
+            curator_affs = request.form.getlist("curator_affiliation")
+            curator_orcids = request.form.getlist("curator_orcid")
 
             max_len = 0
             if curator_names or curator_affs or curator_orcids:
                 max_len = max(len(curator_names), len(curator_affs), len(curator_orcids))
 
             for i in range(max_len):
-                name = (curator_names[i].strip() if i < len(curator_names) else '')
-                orcid = (curator_orcids[i].strip() if i < len(curator_orcids) else '')
+                name = curator_names[i].strip() if i < len(curator_names) else ""
+                orcid = curator_orcids[i].strip() if i < len(curator_orcids) else ""
 
                 profile = None
                 if orcid:
@@ -183,11 +182,12 @@ def edit(community_id):
                     name_query = f"%{name}%"
                     try:
                         from sqlalchemy import func
-                        concat_field = func.concat(UserProfile.name, ' ', UserProfile.surname)
+
+                        concat_field = func.concat(UserProfile.name, " ", UserProfile.surname)
                         profile = UserProfile.query.filter(
-                            (UserProfile.name.ilike(name_query)) |
-                            (UserProfile.surname.ilike(name_query)) |
-                            (concat_field.ilike(name_query))
+                            (UserProfile.name.ilike(name_query))
+                            | (UserProfile.surname.ilike(name_query))
+                            | (concat_field.ilike(name_query))
                         ).first()
                     except Exception:
                         profile = UserProfile.query.filter(
@@ -198,19 +198,16 @@ def edit(community_id):
                     if not service.is_curator(profile.user_id, community_id):
                         service.add_curator(community_id, profile.user_id, requester_id=current_user.id)
 
-            return redirect(url_for('community.detail', community_id=community_id))
+            return redirect(url_for("community.detail", community_id=community_id))
         except Exception as e:
-            form.errors['general'] = [str(e)]
+            form.errors["general"] = [str(e)]
 
     return render_template(
-        'community/edit.html',
-        form=form,
-        community=community,
-        curators=curators,
-        curators_data=curators_data)
+        "community/edit.html", form=form, community=community, curators=curators, curators_data=curators_data
+    )
 
 
-@community_bp.route('/community/<int:community_id>/delete', methods=['POST'])
+@community_bp.route("/community/<int:community_id>/delete", methods=["POST"])
 @login_required
 def delete(community_id):
     service = CommunityService()
@@ -220,36 +217,35 @@ def delete(community_id):
 
     try:
         service.delete_community(community_id)
-        return redirect(url_for('community.index'))
+        return redirect(url_for("community.index"))
     except Exception as e:
         from app import db
+
         db.session.rollback()
         import traceback
+
         traceback.print_exc()
-        flash(f'Could not delete community: {str(e)}', 'danger')
-        return redirect(url_for('community.detail', community_id=community_id))
+        flash(f"Could not delete community: {str(e)}", "danger")
+        return redirect(url_for("community.detail", community_id=community_id))
 
 
-@community_bp.route('/community/<int:community_id>/curators', methods=['GET'])
+@community_bp.route("/community/<int:community_id>/curators", methods=["GET"])
 def list_curators(community_id):
     service = CommunityService()
     curators = service.get_community_curators(community_id)
-    return render_template(
-        'community/curators.html',
-        community_id=community_id,
-        curators=curators)
+    return render_template("community/curators.html", community_id=community_id, curators=curators)
 
 
-@community_bp.route('/community/<int:community_id>/curators/add', methods=['POST'])
+@community_bp.route("/community/<int:community_id>/curators/add", methods=["POST"])
 @login_required
 def add_curator(community_id):
     service = CommunityService()
 
     if not service.is_curator(current_user.id, community_id):
         abort(403)
-    orcid = request.form.get('orcid')
-    user_id = request.form.get('user_id')
-    name = request.form.get('name')
+    orcid = request.form.get("orcid")
+    user_id = request.form.get("user_id")
+    name = request.form.get("name")
 
     resolved_user_id = None
 
@@ -258,24 +254,25 @@ def add_curator(community_id):
         if profile:
             resolved_user_id = profile.user_id
         else:
-            flash(f"No user found with the provided ORCID: {orcid}", 'warning')
-            return redirect(url_for('community.edit', community_id=community_id))
+            flash(f"No user found with the provided ORCID: {orcid}", "warning")
+            return redirect(url_for("community.edit", community_id=community_id))
     elif user_id:
         try:
             resolved_user_id = int(user_id)
         except ValueError:
-            flash('Invalid user identifier provided', 'warning')
-            return redirect(url_for('community.edit', community_id=community_id))
+            flash("Invalid user identifier provided", "warning")
+            return redirect(url_for("community.edit", community_id=community_id))
     elif name:
         profile = None
         name_query = f"%{name}%"
         try:
             from sqlalchemy import func
-            concat_field = func.concat(UserProfile.name, ' ', UserProfile.surname)
+
+            concat_field = func.concat(UserProfile.name, " ", UserProfile.surname)
             profile = UserProfile.query.filter(
-                (UserProfile.name.ilike(name_query)) |
-                (UserProfile.surname.ilike(name_query)) |
-                (concat_field.ilike(name_query))
+                (UserProfile.name.ilike(name_query))
+                | (UserProfile.surname.ilike(name_query))
+                | (concat_field.ilike(name_query))
             ).first()
         except Exception:
             profile = UserProfile.query.filter(
@@ -285,35 +282,36 @@ def add_curator(community_id):
         if profile:
             resolved_user_id = profile.user_id
         else:
-            flash(f"No user found matching the provided name: {name}", 'warning')
-            return redirect(url_for('community.edit', community_id=community_id))
+            flash(f"No user found matching the provided name: {name}", "warning")
+            return redirect(url_for("community.edit", community_id=community_id))
     else:
-        abort(400, 'Missing user identifier')
+        abort(400, "Missing user identifier")
 
     target_user = User.query.get(resolved_user_id)
     if not target_user:
-        flash('Resolved user not found in database', 'warning')
-        return redirect(url_for('community.edit', community_id=community_id))
+        flash("Resolved user not found in database", "warning")
+        return redirect(url_for("community.edit", community_id=community_id))
 
     try:
         service.add_curator(community_id, resolved_user_id, current_user.id)
-        return redirect(url_for('community.edit', community_id=community_id))
+        return redirect(url_for("community.edit", community_id=community_id))
     except Exception:
         from app import db
+
         db.session.rollback()
-        flash('An error occurred while adding curator', 'danger')
-        return redirect(url_for('community.edit', community_id=community_id))
+        flash("An error occurred while adding curator", "danger")
+        return redirect(url_for("community.edit", community_id=community_id))
 
 
-@community_bp.route('/community/<int:community_id>/curators/<int:user_id>/remove', methods=['POST'])
+@community_bp.route("/community/<int:community_id>/curators/<int:user_id>/remove", methods=["POST"])
 @login_required
 def remove_curator(community_id, user_id):
     abort(403)
 
 
-@community_bp.route('/community/my-communities', methods=['GET'])
+@community_bp.route("/community/my-communities", methods=["GET"])
 @login_required
 def my_communities():
     service = CommunityService()
     communities = service.get_user_communities(current_user.id)
-    return render_template('community/my_communities.html', communities=communities)
+    return render_template("community/my_communities.html", communities=communities)

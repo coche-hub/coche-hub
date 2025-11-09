@@ -12,10 +12,7 @@ class CommunityService(BaseService):
 
     def create_community(self, name: str, description: str, creator_id: int, logo: Optional[str] = None) -> Community:
 
-        created_community = self.repository.create(
-            name=name,
-            description=description,
-            logo=logo)
+        created_community = self.repository.create(name=name, description=description, logo=logo)
 
         # Asegurar que se hace flush para obtener el ID
         db.session.flush()
@@ -28,11 +25,12 @@ class CommunityService(BaseService):
         return created_community
 
     def update_community(
-            self,
-            community_id: int,
-            name: Optional[str] = None,
-            description: Optional[str] = None,
-            logo: Optional[str] = None) -> Community:
+        self,
+        community_id: int,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+        logo: Optional[str] = None,
+    ) -> Community:
         community = self.get_by_id(community_id)
         if not community:
             raise ValueError(f"Community with id {community_id} not found")

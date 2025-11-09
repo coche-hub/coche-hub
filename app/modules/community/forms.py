@@ -5,21 +5,15 @@ from wtforms.validators import DataRequired, Length, Optional
 
 class CommunityForm(FlaskForm):
     name = StringField(
-        'Name',
+        "Name",
         validators=[
-            DataRequired(message='Name is required'),
-            Length(min=3, max=100, message='Name must be between 3 and 100 characters')
-        ]
+            DataRequired(message="Name is required"),
+            Length(min=3, max=100, message="Name must be between 3 and 100 characters"),
+        ],
     )
 
-    description = TextAreaField(
-        'Description',
-        validators=[Optional()]
-    )
+    description = TextAreaField("Description", validators=[Optional()])
 
-    logo = StringField(
-        'Logo URL',
-        validators=[Optional(), Length(max=255)]
-    )
+    logo = StringField("Logo URL", validators=[Optional(), Length(max=255)])
 
-    submit = SubmitField('Create Community')
+    submit = SubmitField("Create Community")

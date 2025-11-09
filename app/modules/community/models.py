@@ -3,7 +3,7 @@ from datetime import datetime
 
 
 class Community(db.Model):
-    __tablename__ = 'community'
+    __tablename__ = "community"
 
     # Columns
     id = db.Column(db.Integer, primary_key=True)
@@ -14,10 +14,10 @@ class Community(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relationships
-    curators = db.relationship('CommunityCurator', back_populates='community', cascade='all, delete-orphan')
+    curators = db.relationship("CommunityCurator", back_populates="community", cascade="all, delete-orphan")
 
     def __repr__(self):
-        return f'<Community {self.name}>'
+        return f"<Community {self.name}>"
 
     def __init__(self, name: str, description: str = None, logo: str = None):
         self.name = name
@@ -26,21 +26,19 @@ class Community(db.Model):
 
 
 class CommunityCurator(db.Model):
-    __tablename__ = 'community_curator'
+    __tablename__ = "community_curator"
 
     # Columns
     id = db.Column(db.Integer, primary_key=True)
-    community_id = db.Column(db.Integer, db.ForeignKey('community.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    community_id = db.Column(db.Integer, db.ForeignKey("community.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     assigned_at = db.Column(db.DateTime, default=datetime.now)
 
     # Relationships
-    community = db.relationship('Community', back_populates='curators')
-    user = db.relationship('User', backref='curated_communities')
+    community = db.relationship("Community", back_populates="curators")
+    user = db.relationship("User", backref="curated_communities")
 
-    __table_args__ = (
-        db.UniqueConstraint('community_id', 'user_id', name='unique_community_curator'),
-    )
+    __table_args__ = (db.UniqueConstraint("community_id", "user_id", name="unique_community_curator"),)
 
     def __repr__(self):
-        return f'<CommunityCurator community_id={self.community_id} user_id={self.user_id}>'
+        return f"<CommunityCurator community_id={self.community_id} user_id={self.user_id}>"
