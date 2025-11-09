@@ -55,3 +55,6 @@ ubuntu-bionic-18.04-cloudimg-console.log
 # Custom ignores
 # ==========================
 .moduleignore
+
+# Fakenodo storage
+app/modules/fakenodo/storage.json
