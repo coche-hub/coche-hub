@@ -3,7 +3,6 @@ from enum import Enum
 
 from flask import request
 from sqlalchemy import Enum as SQLAlchemyEnum
-from sqlalchemy import event
 
 from app import db
 
@@ -64,6 +63,7 @@ class DSMetaData(db.Model):
     ds_metrics = db.relationship("DSMetrics", uselist=False, backref="ds_meta_data", cascade="all, delete")
     authors = db.relationship("Author", backref="ds_meta_data", lazy=True, cascade="all, delete")
 
+
 class DataSet(db.Model):
     __tablename__ = "data_set"
 
@@ -73,22 +73,21 @@ class DataSet(db.Model):
     ds_meta_data_id = db.Column(db.Integer, db.ForeignKey("ds_meta_data.id"), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
-    version = db.Column(db.Integer, nullable=False, default=1)   
+    version = db.Column(db.Integer, nullable=False, default=1)
 
     ds_meta_data = db.relationship("DSMetaData", backref=db.backref("data_set", uselist=False))
     feature_models = db.relationship("FeatureModel", backref="data_set", lazy=True, cascade="all, delete")
 
-
-    DataSetType = db.Column(db.String(50), nullable=False, default='uvl_data_set')
+    DataSetType = db.Column(db.String(50), nullable=False, default="uvl_data_set")
     __mapper_args__ = {
         "polymorphic_on": DataSetType,
-        "polymorphic_identity": "data_set",  
-    }    
+        "polymorphic_identity": "data_set",
+    }
 
     def increment_dataset_version(self):
         self.version = (self.version or 1) + 1
 
-    def get_version(self): 
+    def get_version(self):
         return self.version
 
     def get_dataset_type(self):
@@ -150,6 +149,7 @@ class DataSet(db.Model):
     def __repr__(self):
         return f"DataSet<{self.id}>"
 
+
 class UVLDataSet(DataSet):
     __tablename__ = "uvl_data_set"
 
@@ -158,6 +158,7 @@ class UVLDataSet(DataSet):
     __mapper_args__ = {
         "polymorphic_identity": "uvl_data_set",
     }
+
 
 class CSVDataSet(DataSet):
     __tablename__ = "csv_data_set"
@@ -170,6 +171,7 @@ class CSVDataSet(DataSet):
     __mapper_args__ = {
         "polymorphic_identity": "csv_data_set",
     }
+
 
 class DSDownloadRecord(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -207,12 +209,13 @@ class DOIMapping(db.Model):
 # Este código hace que se incremente la versión antes del update
 # pero NO cuando se crea una nueva versión manualmente
 
+
 def increment_dataset_version(mapper, connection, target):
     # Only increment if version change was not manual (i.e., if it's the same)
     # When creating a new version manually, we set the version explicitly
     # so we need to check if the version was already incremented
     pass  # Disabled automatic increment - version is now managed explicitly
 
+
 # Commented out to disable automatic version increment
 # event.listen(DataSet, "before_update", increment_dataset_version)
-

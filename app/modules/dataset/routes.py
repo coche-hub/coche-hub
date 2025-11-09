@@ -20,7 +20,7 @@ from flask import (
 from flask_login import current_user, login_required
 
 from app.modules.dataset import dataset_bp
-from app.modules.dataset.forms import CSVDataSetForm, DataSetForm, FeatureModelForm, EditDataSetForm, EditCSVDataSetForm
+from app.modules.dataset.forms import CSVDataSetForm, DataSetForm, EditCSVDataSetForm, EditDataSetForm
 from app.modules.dataset.models import DSDownloadRecord
 from app.modules.dataset.services import (
     AuthorService,
@@ -279,46 +279,43 @@ def get_unsynchronized_dataset(dataset_id):
 @login_required
 def edit_dataset(dataset_id):
     dataset = dataset_service.get_or_404(dataset_id)
-    
+
     # Check if the user is the owner
     if dataset.user_id != current_user.id:
         abort(403)
-    
+
     # Check if the dataset is not synchronized (only unsynchronized datasets can be edited)
     if dataset.ds_meta_data.dataset_doi:
         abort(403)
-    
+
     # Determine dataset type
     dataset_type = dataset.get_dataset_type()
-    is_csv = dataset_type == 'csv_data_set'
-    
+    is_csv = dataset_type == "csv_data_set"
+
     # Initialize forms
     if is_csv:
         form = EditCSVDataSetForm()
     else:
         form = EditDataSetForm()
-    
+
     csv_form = EditCSVDataSetForm() if is_csv else None
-    
+
     if request.method == "POST":
         if not form.validate_on_submit():
             return jsonify({"message": form.errors}), 400
-        
+
         try:
             logger.info("Creating new version of dataset...")
             # Create new version with updated data
             # Note: create_new_version() now handles moving files from temp folder internally
             new_dataset = dataset_service.create_new_version(
-                dataset=dataset,
-                form=form,
-                current_user=current_user,
-                csv_form=csv_form
+                dataset=dataset, form=form, current_user=current_user, csv_form=csv_form
             )
             logger.info(f"Created new version: {new_dataset}")
         except Exception as exc:
             logger.exception(f"Exception while creating new version: {exc}")
             return jsonify({"Exception while creating new version: ": str(exc)}), 400
-        
+
         # send dataset as deposition to Zenodo
         data = {}
         try:
@@ -358,7 +355,7 @@ def edit_dataset(dataset_id):
 
         msg = "Everything works!"
         return jsonify({"message": msg}), 200
-    
+
     # GET request - populate form with existing data
     form.title.data = dataset.ds_meta_data.title
     form.desc.data = dataset.ds_meta_data.description
@@ -366,16 +363,10 @@ def edit_dataset(dataset_id):
     form.publication_doi.data = dataset.ds_meta_data.publication_doi
     form.dataset_doi.data = dataset.ds_meta_data.dataset_doi
     form.tags.data = dataset.ds_meta_data.tags
-    form.dataset_type.data = 'csv' if is_csv else 'uvl'
-    
+    form.dataset_type.data = "csv" if is_csv else "uvl"
+
     if is_csv and csv_form:
         csv_form.has_header.data = dataset.has_header
         csv_form.delimiter.data = dataset.delimiter
-    
-    return render_template(
-        "dataset/edit_dataset.html",
-        form=form,
-        csv_form=csv_form,
-        dataset=dataset,
-        is_csv=is_csv
-    )
+
+    return render_template("dataset/edit_dataset.html", form=form, csv_form=csv_form, dataset=dataset, is_csv=is_csv)

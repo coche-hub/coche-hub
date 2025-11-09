@@ -56,10 +56,7 @@ class FeatureModelForm(FlaskForm):
 
 class DataSetForm(FlaskForm):
     dataset_type = SelectField(
-        "Dataset type",
-        choices=[("uvl", "UVL"), ("csv", "CSV")],
-        validators=[DataRequired()],
-        default="uvl"
+        "Dataset type", choices=[("uvl", "UVL"), ("csv", "CSV")], validators=[DataRequired()], default="uvl"
     )
     title = StringField("Title", validators=[DataRequired()])
     desc = TextAreaField("Description", validators=[DataRequired()])
@@ -122,10 +119,7 @@ class CSVDataSetForm(DataSetForm):
 
 class EditDataSetForm(FlaskForm):
     dataset_type = SelectField(
-        "Dataset type",
-        choices=[("uvl", "UVL"), ("csv", "CSV")],
-        validators=[DataRequired()],
-        default="uvl"
+        "Dataset type", choices=[("uvl", "UVL"), ("csv", "CSV")], validators=[DataRequired()], default="uvl"
     )
     title = StringField("Title", validators=[DataRequired()])
     desc = TextAreaField("Description", validators=[DataRequired()])
