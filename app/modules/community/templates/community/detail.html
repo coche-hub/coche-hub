@@ -1,6 +1,16 @@
 {% extends "base_template.html" %} {% block title %}{{ community.name }}{%
 endblock %} {% block content %}
 <div class="container mt-4">
+  {# Show flashed messages (warnings about unresolved curators, etc.) #} {% with
+  messages = get_flashed_messages(with_categories=true) %} {% if messages %} {%
+  for category, message in messages %}
+  <div
+    class="alert alert-{{ 'warning' if category == 'warning' else category }}"
+    role="alert"
+  >
+    {{ message }}
+  </div>
+  {% endfor %} {% endif %} {% endwith %}
   <div class="row">
     <div class="col-md-8">
       <div class="card">
@@ -60,29 +70,22 @@ endblock %} {% block content %}
             {% for curator in curators %}
             <li class="mb-2">
               <i class="fas fa-user"></i> {{ curator.user.email if curator.user
-              else 'Unknown User' }} {% if is_curator and curators|length > 1 %}
-              <form
-                method="POST"
-                action="{{ url_for('community.remove_curator', community_id=community.id, user_id=curator.user_id) }}"
-                class="d-inline"
-                onsubmit="return confirm('Remove this curator?');"
-              >
-                <button type="submit" class="btn btn-sm btn-outline-danger">
-                  <i class="fas fa-times"></i>
-                </button>
-              </form>
-              {% endif %}
+              else 'Unknown User' }}
             </li>
             {% endfor %}
           </ul>
           {% else %}
           <p class="text-muted">No curators assigned.</p>
-          {% endif %}
-
-          {% if is_curator %}
+          {% endif %} {% if is_curator %}
           <hr />
-          <p class="small text-muted">You can manage curators from the Edit page.</p>
-          <a href="{{ url_for('community.edit', community_id=community.id) }}" class="btn btn-sm btn-secondary">Edit community to manage curators</a>
+          <p class="small text-muted">
+            You can manage curators from the Edit page.
+          </p>
+          <a
+            href="{{ url_for('community.edit', community_id=community.id) }}"
+            class="btn btn-sm btn-secondary"
+            >Edit community to manage curators</a
+          >
           {% endif %}
         </div>
       </div>
