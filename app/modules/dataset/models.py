@@ -65,14 +65,33 @@ class DSMetaData(db.Model):
 
 
 class DataSet(db.Model):
+    __tablename__ = "data_set"
+
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
 
     ds_meta_data_id = db.Column(db.Integer, db.ForeignKey("ds_meta_data.id"), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
+    version = db.Column(db.Integer, nullable=False, default=1)
+
     ds_meta_data = db.relationship("DSMetaData", backref=db.backref("data_set", uselist=False))
     feature_models = db.relationship("FeatureModel", backref="data_set", lazy=True, cascade="all, delete")
+
+    DataSetType = db.Column(db.String(50), nullable=False, default="uvl_data_set")
+    __mapper_args__ = {
+        "polymorphic_on": DataSetType,
+        "polymorphic_identity": "data_set",
+    }
+
+    def increment_dataset_version(self):
+        self.version = (self.version or 1) + 1
+
+    def get_version(self):
+        return self.version
+
+    def get_dataset_type(self):
+        return self.DataSetType
 
     def name(self):
         return self.ds_meta_data.title
@@ -131,6 +150,29 @@ class DataSet(db.Model):
         return f"DataSet<{self.id}>"
 
 
+class UVLDataSet(DataSet):
+    __tablename__ = "uvl_data_set"
+
+    id = db.Column(db.Integer, db.ForeignKey("data_set.id"), primary_key=True)
+
+    __mapper_args__ = {
+        "polymorphic_identity": "uvl_data_set",
+    }
+
+
+class CSVDataSet(DataSet):
+    __tablename__ = "csv_data_set"
+
+    id = db.Column(db.Integer, db.ForeignKey("data_set.id"), primary_key=True)
+
+    delimiter = db.Column(db.String(5), nullable=False, default=",")
+    has_header = db.Column(db.Boolean, nullable=False, default=True)
+
+    __mapper_args__ = {
+        "polymorphic_identity": "csv_data_set",
+    }
+
+
 class DSDownloadRecord(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
@@ -162,3 +204,18 @@ class DOIMapping(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     dataset_doi_old = db.Column(db.String(120))
     dataset_doi_new = db.Column(db.String(120))
+
+
+# Este código hace que se incremente la versión antes del update
+# pero NO cuando se crea una nueva versión manualmente
+
+
+def increment_dataset_version(mapper, connection, target):
+    # Only increment if version change was not manual (i.e., if it's the same)
+    # When creating a new version manually, we set the version explicitly
+    # so we need to check if the version was already incremented
+    pass  # Disabled automatic increment - version is now managed explicitly
+
+
+# Commented out to disable automatic version increment
+# event.listen(DataSet, "before_update", increment_dataset_version)

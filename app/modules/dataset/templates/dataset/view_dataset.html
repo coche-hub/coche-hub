@@ -26,6 +26,15 @@
             Explore more datasets
         </a>
     </div>
+    
+    {% if current_user.is_authenticated and current_user.id == dataset.user_id and not dataset.ds_meta_data.dataset_doi %}
+    <div class="col-6 text-end">
+        <a href="/dataset/edit/{{ dataset.id }}" class="btn btn-success btn-sm" style="border-radius: 5px;">
+            <i data-feather="edit" class="center-button-icon"></i>
+            Create New Version
+        </a>
+    </div>
+    {% endif %}
 
 </div>
 
@@ -39,6 +48,7 @@
                     <h1><b>{{ dataset.ds_meta_data.title }}</b></h1>
                     <div>
                         <span class="badge bg-secondary">{{ dataset.get_cleaned_publication_type() }}</span>
+                        <span class="badge bg-info ms-2">Version {{ dataset.version }}</span>
                     </div>
                 </div>
                 <p class="text-secondary">{{ dataset.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
@@ -237,7 +247,7 @@
 
                 <div class="row">
                     <div class="col-12 d-flex justify-content-between align-items-center">
-                        <h4 style="margin-bottom: 0px">UVL models</h4>
+                        <h4 style="margin-bottom: 0px">{{dataset.get_dataset_type()}}</h4>
                         <h4 style="margin-bottom: 0px;"><span class="badge bg-dark">{{ dataset.get_files_count() }}</span></h4>
                     </div>
                 </div>
