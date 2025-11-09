@@ -1,9 +1,10 @@
-from flask import Blueprint, render_template, request, redirect, url_for, abort, flash
-from flask_login import login_required, current_user
-from app.modules.community.services import CommunityService
-from app.modules.profile.models import UserProfile
+from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
+from flask_login import current_user, login_required
+
 from app.modules.auth.models import User
 from app.modules.community.forms import CommunityForm
+from app.modules.community.services import CommunityService
+from app.modules.profile.models import UserProfile
 
 community_bp = Blueprint("community", __name__, template_folder="templates")
 

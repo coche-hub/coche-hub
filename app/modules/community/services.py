@@ -1,8 +1,9 @@
+from typing import Optional
+
 from app import db
 from app.modules.community.models import Community, CommunityCurator
-from app.modules.community.repositories import CommunityRepository, CommunityCuratorRepository
+from app.modules.community.repositories import CommunityCuratorRepository, CommunityRepository
 from core.services.BaseService import BaseService
-from typing import Optional
 
 
 class CommunityService(BaseService):
