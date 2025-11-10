@@ -1,0 +1,101 @@
+Modelo,Marca,Motor,Consumo,Combustible,Comienzo de producción,Fin de producción,Asientos,Puertas,Peso (kg),Carga máxima (kg),País de origen,Precio estimado (€)
+i20,Hyundai,1.2 T,9.4,Gasolina,2006,2024,8,4,1083,382,Corea del Sur,20861
+Focus,Ford,1.4 T,8.4,Gasolina,2003,2015,1,4,1630,421,Estados Unidos,19078
+RAV4,Toyota,2.2 Turbo,8.8,Eléctrico,2023,2023,4,4,2300,364,Japón,53498
+Q5,Audi,2.2 Hybrid,8.0,Eléctrico,2002,2010,9,2,2250,347,Alemania,27005
+Fiesta,Ford,1.4 EcoBoost,9.5,Gasolina,2012,,2,4,2160,753,Estados Unidos,19094
+3008,Peugeot,2.2 Turbo,5.5,Híbrido,2024,2024,8,2,1798,317,Francia,22486
+X3,BMW,1.4 EcoBoost,4.7,Eléctrico,2006,2016,5,4,1707,678,Alemania,55471
+Yaris,Toyota,2.2 VTEC,8.2,Híbrido,2000,2025,8,4,1921,623,Japón,29448
+3008,Peugeot,1.2 T,4.9,Diesel,2002,2023,1,2,2124,500,Francia,31124
+Clio,Renault,1.0 TDI,4.7,Híbrido,2019,,9,2,1505,301,Francia,33433
+Megane,Renault,1.0 VTEC,6.6,Eléctrico,2008,2008,4,2,2478,378,Francia,38407
+3008,Peugeot,1.4 TSI,7.1,Gasolina,2013,2023,5,4,2426,435,Francia,24882
+Golf,Volkswagen,2.2 T,4.9,Diesel,2021,2021,5,4,1326,659,Alemania,26226
+Golf,Volkswagen,1.4 TSI,6.3,Gasolina,2015,,9,4,1411,502,Alemania,18192
+X5,BMW,1.4 Turbo,4.4,Gasolina,2008,2019,1,2,2500,711,Alemania,20314
+X3,BMW,3.0 EcoBoost,9.4,Gasolina,2006,2019,4,4,1778,741,Alemania,25932
+i10,Hyundai,2.2 EcoBoost,6.7,Diesel,2004,,5,2,1754,758,Corea del Sur,33829
+C200,Mercedes-Benz,1.4 EcoBoost,9.2,Gasolina,2010,2020,4,4,1881,344,Alemania,21572
+Camry,Toyota,1.2 TSI,5.2,Gasolina,2005,2013,9,2,2048,763,Japón,28840
+Q5,Audi,1.4 T,7.4,Diesel,2005,2014,2,2,2132,456,Alemania,19492
+Focus,Ford,3.0 VTEC,6.7,Eléctrico,2014,2021,1,4,1650,606,Estados Unidos,50221
+X5,BMW,2.2 Hybrid,5.9,Diesel,1996,2023,9,4,1017,696,Alemania,30186
+Q5,Audi,1.6 TSI,7.8,Eléctrico,2003,2010,8,4,1965,750,Alemania,32869
+Golf,Volkswagen,1.0 Hybrid,6.6,Eléctrico,2000,2006,5,2,2048,513,Alemania,50889
+X3,BMW,3.0 TSI,8.9,Híbrido,2020,2023,9,4,1148,567,Alemania,35536
+Kona,Hyundai,1.4 Hybrid,3.9,Gasolina,1996,2000,4,4,2121,365,Corea del Sur,21741
+Accord,Honda,3.0 TSI,5.9,Híbrido,1997,1999,2,2,2004,526,Japón,36937
+Twingo,Renault,1.0 VTEC,7.0,Eléctrico,2009,2015,2,4,1881,627,Francia,51449
+Golf,Volkswagen,1.2 TSI,7.8,Eléctrico,2021,2023,4,4,1934,399,Alemania,28569
+X5,BMW,3.0 Hybrid,7.8,Eléctrico,1999,2012,1,4,2465,432,Alemania,58647
+Captur,Renault,1.2 VTEC,8.1,Eléctrico,1998,2008,8,2,1082,349,Francia,26608
+Tiguan,Volkswagen,1.0 EcoBoost,8.9,Diesel,2007,,5,4,2243,539,Alemania,30117
+Civic,Honda,2.2 T,8.7,Híbrido,2009,,4,4,1423,685,Japón,26898
+A180,Mercedes-Benz,1.0 TDI,8.8,Eléctrico,2003,2005,9,4,908,406,Alemania,37964
+Passat,Volkswagen,3.0 T,4.1,Diesel,2024,,5,4,1352,418,Alemania,27175
+Clio,Renault,2.0 Hybrid,3.5,Eléctrico,2013,,2,2,1152,521,Francia,59905
+Mustang,Ford,1.0 VTEC,6.6,Eléctrico,2001,,9,4,1931,376,Estados Unidos,44743
+3008,Peugeot,1.0 Hybrid,4.1,Gasolina,2000,2022,4,2,1574,303,Francia,22976
+Polo,Volkswagen,1.6 TSI,6.3,Híbrido,2007,,5,4,2202,714,Alemania,31138
+Tucson,Hyundai,1.2 Turbo,8.8,Gasolina,2017,2023,8,2,2455,355,Corea del Sur,19122
+208,Peugeot,1.0 T,9.0,Diesel,1998,2002,1,4,1398,402,Francia,19094
+i10,Hyundai,2.2 Turbo,4.0,Gasolina,2021,2023,5,4,1611,621,Corea del Sur,27598
+Captur,Renault,1.4 TDI,3.8,Diesel,2024,,1,4,1224,752,Francia,24838
+Civic,Honda,2.2 VTEC,8.5,Diesel,1996,2007,9,4,1746,563,Japón,31887
+M4,BMW,1.0 TDI,4.8,Híbrido,2022,2022,8,2,1142,493,Alemania,41831
+M4,BMW,1.6 VTEC,7.7,Diesel,2001,2009,2,4,2427,447,Alemania,21905
+M4,BMW,2.0 VTEC,5.8,Gasolina,1998,2006,5,2,2190,508,Alemania,27634
+RAV4,Toyota,1.4 T,5.7,Diesel,1998,2018,9,2,1820,393,Japón,19270
+i20,Hyundai,2.0 T,6.0,Gasolina,2005,2023,4,2,1208,775,Corea del Sur,15554
+Kona,Hyundai,1.6 TSI,5.5,Gasolina,2023,2025,2,4,1788,722,Corea del Sur,28648
+Civic,Honda,2.2 Hybrid,7.6,Eléctrico,2014,,9,4,1265,477,Japón,50709
+CR-V,Honda,2.2 TDI,8.8,Eléctrico,1995,1995,9,4,1701,708,Japón,35728
+Tiguan,Volkswagen,1.6 EcoBoost,3.7,Híbrido,2006,,4,4,912,466,Alemania,35613
+Golf,Volkswagen,1.0 TSI,6.4,Gasolina,2023,2024,8,2,1102,482,Alemania,15917
+Mustang,Ford,1.4 Hybrid,5.0,Gasolina,2021,,8,2,1660,443,Estados Unidos,22207
+Clio,Renault,1.6 T,6.5,Gasolina,2004,2016,8,2,2046,411,Francia,26375
+E220,Mercedes-Benz,1.6 Turbo,9.3,Diesel,2015,,8,2,2021,739,Alemania,31573
+Camry,Toyota,3.0 Hybrid,9.5,Eléctrico,2009,2011,9,2,2407,350,Japón,52718
+Civic,Honda,1.6 TDI,9.4,Diesel,2017,2020,4,4,1742,766,Japón,25308
+Camry,Toyota,2.0 TDI,7.5,Diesel,2008,,5,2,2250,767,Japón,33110
+Focus,Ford,2.2 T,9.1,Diesel,2020,2021,8,2,1551,380,Estados Unidos,30073
+208,Peugeot,1.4 Turbo,5.6,Gasolina,1998,2023,1,2,1807,789,Francia,19700
+M4,BMW,1.0 Hybrid,9.4,Híbrido,2011,2012,8,4,2249,581,Alemania,36187
+X3,BMW,1.4 VTEC,4.3,Híbrido,2025,2025,5,4,1905,354,Alemania,30767
+Twingo,Renault,2.2 Turbo,3.8,Eléctrico,2015,2017,8,2,1866,472,Francia,27027
+5008,Peugeot,3.0 TDI,6.7,Híbrido,2015,2020,2,2,1807,620,Francia,44047
+Camry,Toyota,3.0 TSI,7.4,Eléctrico,2025,2025,2,2,1635,321,Japón,52990
+A180,Mercedes-Benz,1.4 T,7.2,Diesel,2011,,8,2,2198,709,Alemania,31897
+Yaris,Toyota,1.2 TDI,5.2,Eléctrico,1999,2007,9,4,2499,420,Japón,52901
+Tucson,Hyundai,3.0 VTEC,8.3,Híbrido,2006,2018,9,2,1779,403,Corea del Sur,40205
+X3,BMW,1.2 EcoBoost,5.3,Diesel,2012,,1,2,2226,545,Alemania,29895
+320i,BMW,1.0 TDI,5.4,Eléctrico,2015,,5,4,1699,537,Alemania,51072
+Megane,Renault,1.2 EcoBoost,5.4,Gasolina,1996,,2,4,1238,337,Francia,24917
+A4,Audi,3.0 Turbo,6.6,Híbrido,2021,,8,4,2143,593,Alemania,32769
+Focus,Ford,3.0 Turbo,7.8,Eléctrico,1999,2004,5,4,2345,705,Estados Unidos,49994
+Mustang,Ford,2.0 EcoBoost,8.9,Gasolina,2015,2019,2,2,1067,673,Estados Unidos,18143
+Kuga,Ford,1.0 T,8.6,Diesel,1998,2024,1,2,925,375,Estados Unidos,32159
+A4,Audi,3.0 TSI,7.0,Gasolina,2003,,9,2,2413,550,Alemania,25001
+i10,Hyundai,2.2 Hybrid,4.9,Diesel,2010,2016,4,4,2374,777,Corea del Sur,27034
+Clio,Renault,1.0 EcoBoost,9.2,Diesel,2020,2021,5,4,1911,361,Francia,33014
+RAV4,Toyota,2.2 VTEC,4.8,Diesel,2002,,2,2,2298,661,Japón,24093
+208,Peugeot,1.0 TSI,6.7,Gasolina,2022,2024,2,4,1523,746,Francia,18008
+Polo,Volkswagen,3.0 TDI,6.3,Eléctrico,1997,2014,2,4,2258,375,Alemania,40395
+308,Peugeot,3.0 TSI,4.4,Gasolina,2014,2022,4,4,2129,411,Francia,15515
+A3,Audi,1.2 Hybrid,4.4,Híbrido,2025,2025,8,4,2285,308,Alemania,32110
+208,Peugeot,1.4 EcoBoost,8.6,Eléctrico,2025,2025,5,2,1688,446,Francia,59817
+208,Peugeot,1.0 VTEC,8.4,Eléctrico,2012,2013,1,2,1362,364,Francia,33095
+208,Peugeot,1.4 TDI,4.1,Eléctrico,1998,2017,1,4,1769,519,Francia,36623
+Kona,Hyundai,2.0 T,6.5,Híbrido,2025,,8,4,1148,456,Corea del Sur,27320
+X5,BMW,2.2 TSI,4.4,Gasolina,2022,2025,9,4,2046,604,Alemania,26040
+Civic,Honda,2.2 TSI,6.6,Eléctrico,2022,,8,4,1229,438,Japón,51677
+208,Peugeot,1.0 Turbo,7.4,Diesel,2009,,1,4,1625,453,Francia,24266
+Tiguan,Volkswagen,1.6 EcoBoost,5.0,Diesel,2025,2025,4,2,1783,440,Alemania,21171
+Jazz,Honda,1.0 TDI,7.7,Gasolina,2009,2018,9,4,2121,509,Japón,26085
+Fiesta,Ford,2.0 T,4.1,Diesel,2007,2024,4,4,2131,314,Estados Unidos,27116
+X3,BMW,2.0 Hybrid,3.6,Diesel,2019,2020,8,4,1213,723,Alemania,23116
+C200,Mercedes-Benz,1.0 EcoBoost,3.9,Gasolina,2005,2009,8,4,1024,452,Alemania,27927
+Tucson,Hyundai,1.2 TSI,3.7,Eléctrico,2005,2009,4,4,1039,486,Corea del Sur,48000
+5008,Peugeot,1.0 VTEC,5.4,Gasolina,2023,,2,2,2103,478,Francia,22277
+Tiguan,Volkswagen,1.6 Turbo,5.0,Diesel,1998,2000,1,4,1653,412,Alemania,27669
