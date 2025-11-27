@@ -6,8 +6,15 @@ labels: type:unplanned-task
 assignees: ""
 ---
 
-**Contexto de la tarea:**
+## Roles
+
+Responsable: @...
+Revisor: @...
+
+## Contexto de la tarea
+
 ...
 
-**Solución a realizar:**
+## Solución a realizar
+
 ...

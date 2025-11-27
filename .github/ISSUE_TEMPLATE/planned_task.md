@@ -6,5 +6,11 @@ labels: type:planned-task
 assignees: ""
 ---
 
-**Historia de usuario:**
+## Roles
+
+Responsable: @...
+Revisor: @...
+
+## Historia de usuario
+
 ...
