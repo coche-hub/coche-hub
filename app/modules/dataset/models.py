@@ -35,11 +35,31 @@ class Author(db.Model):
     affiliation = db.Column(db.String(120))
     orcid = db.Column(db.String(120))
     ds_meta_data_id = db.Column(db.Integer, db.ForeignKey("ds_meta_data.id"))
-    fm_meta_data_id = db.Column(db.Integer, db.ForeignKey("fm_meta_data.id"))
+    fm_meta_data_id = db.Column(db.Integer, db.ForeignKey("fm_meta_data.id"))  # Legacy - kept for backward compatibility
 
     def to_dict(self):
         return {"name": self.name, "affiliation": self.affiliation, "orcid": self.orcid}
 
+class Coche(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    modelo = db.Column(db.String(120), nullable=False)
+    marca = db.Column(db.String(120), nullable=False)
+    motor = db.Column(db.String(120), nullable=False)
+    consumo = db.Column(db.Float, nullable=False)
+    combustible = db.Column(db.String(120), nullable=False)
+    comienzo_de_produccion = db.Column(db.Integer, nullable=False)
+    fin_de_produccion = db.Column(db.Integer, nullable=True)
+    asientos = db.Column(db.Integer, nullable=False)
+    puertas = db.Column(db.Integer, nullable=False)
+    peso = db.Column(db.Integer, nullable=False)
+    carga_max = db.Column(db.Integer, nullable=False)
+    pais_de_origen = db.Column(db.String(120), nullable=False)
+    precio_estimado = db.Column(db.Integer, nullable=False)
+    matricula = db.Column(db.String(7), nullable=False)
+    fecha_matriculacion = db.Column(db.DateTime, nullable=False)
+
+    def __repr__(self):
+        return f"Coche<{self.modelo} {self.marca} {self.matricula}>"
 
 class DSMetrics(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -74,15 +94,26 @@ class DataSet(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     version = db.Column(db.Integer, nullable=False, default=1)
+    DataSetType = db.Column(db.String(50))
 
     ds_meta_data = db.relationship("DSMetaData", backref=db.backref("data_set", uselist=False))
-    feature_models = db.relationship("FeatureModel", backref="data_set", lazy=True, cascade="all, delete")
+    
+    # Relación directa con archivos (reemplaza feature_models)
+    files = db.relationship("Hubfile", backref="dataset", lazy=True, cascade="all, delete")
 
-    DataSetType = db.Column(db.String(50), nullable=False, default="uvl_data_set")
     __mapper_args__ = {
-        "polymorphic_on": DataSetType,
         "polymorphic_identity": "data_set",
+        "polymorphic_on": DataSetType,
     }
+
+    # ELIMINAR ESTE MÉTODO - causa duplicación
+    # def files(self):
+    #     """Return all files associated with this dataset"""
+    #     from app.modules.hubfile.models import Hubfile
+    #     return Hubfile.query.filter_by(data_set_id=self.id).all()
+
+    def get_dataset_type(self):
+        return "dataset"
 
     def increment_dataset_version(self):
         self.version = (self.version or 1) + 1
@@ -90,14 +121,8 @@ class DataSet(db.Model):
     def get_version(self):
         return self.version
 
-    def get_dataset_type(self):
-        return self.DataSetType
-
     def name(self):
         return self.ds_meta_data.title
-
-    def files(self):
-        return [file for fm in self.feature_models for file in fm.files]
 
     def delete(self):
         db.session.delete(self)
@@ -110,10 +135,10 @@ class DataSet(db.Model):
         return f"https://zenodo.org/record/{self.ds_meta_data.deposition_id}" if self.ds_meta_data.dataset_doi else None
 
     def get_files_count(self):
-        return sum(len(fm.files) for fm in self.feature_models)
+        return len(self.files)
 
     def get_file_total_size(self):
-        return sum(file.size for fm in self.feature_models for file in fm.files)
+        return sum(file.size for file in self.files)
 
     def get_file_total_size_for_human(self):
         from app.modules.dataset.services import SizeService
@@ -140,7 +165,7 @@ class DataSet(db.Model):
             "url": self.get_uvlhub_doi(),
             "download": f'{request.host_url.rstrip("/")}/dataset/download/{self.id}',
             "zenodo": self.get_zenodo_url(),
-            "files": [file.to_dict() for fm in self.feature_models for file in fm.files],
+            "files": [file.to_dict() for file in self.files],
             "files_count": self.get_files_count(),
             "total_size_in_bytes": self.get_file_total_size(),
             "total_size_in_human_format": self.get_file_total_size_for_human(),
@@ -150,14 +175,14 @@ class DataSet(db.Model):
         return f"DataSet<{self.id}>"
 
 
-class UVLDataSet(DataSet):
-    __tablename__ = "uvl_data_set"
+# class UVLDataSet(DataSet):
+#     __tablename__ = "uvl_data_set"
 
-    id = db.Column(db.Integer, db.ForeignKey("data_set.id"), primary_key=True)
+#     id = db.Column(db.Integer, db.ForeignKey("data_set.id"), primary_key=True)
 
-    __mapper_args__ = {
-        "polymorphic_identity": "uvl_data_set",
-    }
+#     __mapper_args__ = {
+#         "polymorphic_identity": "uvl_data_set",
+#     }
 
 
 class CSVDataSet(DataSet):

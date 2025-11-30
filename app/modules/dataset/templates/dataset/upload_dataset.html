@@ -47,15 +47,6 @@
                         <h1 class="h3 mb-3">Basic info</h1>
 
                         <div class="row" style="padding-left: 2rem">
-                            <div class="col-12">
-                                <div class="mb-3">
-                                    {{ form.dataset_type.label(class="form-label") }}
-                                    <select name="dataset_type" id="dataset_type_select" class="form-control" >
-                                        <option value="uvl" {% if dataset_type == 'uvl' %}selected{% endif %}>UVL</option>
-                                        <option value="csv" {% if dataset_type == 'csv' %}selected{% endif %}>CSV</option>
-                                    </select>
-                                </div>
-                            </div>
                             
                             <div class="col-lg-6 col-xs-12 col-md-12">
                                 <div class="mb-3">
@@ -95,22 +86,22 @@
                                 </div>
                             </div>
                             
-                            <div class="col-6 csv-only">
+                            <div class="col-6">
                                 <div class="mb-3">
                                     <div class="form-check">
-                                        {{ csv_form.has_header(class="form-check-input") }}
-                                        {{ csv_form.has_header.label(class="form-check-label") }}
-                                        {% for error in csv_form.has_header.errors %}
+                                        {{ form.has_header(class="form-check-input") }}
+                                        {{ form.has_header.label(class="form-check-label") }}
+                                        {% for error in form.has_header.errors %}
                                             <span style="color: red;">{{ error }}</span>
                                         {% endfor %}
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-6 csv-only">
+                            <div class="col-6">
                                 <div class="mb-3">
-                                    {{ csv_form.delimiter.label(class="form-label") }}
-                                    {{ csv_form.delimiter(class="form-control") }}
-                                    {% for error in csv_form.delimiter.errors %}
+                                    {{ form.delimiter.label(class="form-label") }}
+                                    {{ form.delimiter(class="form-control") }}
+                                    {% for error in form.delimiter.errors %}
                                         <span style="color: red;">{{ error }}</span>
                                     {% endfor %}
                                 </div>
@@ -243,7 +234,7 @@
 
         <div class="col-xl-6 col-lg-12 col-md-12 col-sm-12">
 
-            <h1 class="h3 mb-3 mt-2">UVL models</h1>
+            <h1 class="h3 mb-3 mt-2">CSV files</h1>
 
             <div id="uploaded_models_form" style="padding-left: 2rem">
 
@@ -261,7 +252,7 @@
                         url: "/dataset/file/upload",
                         paramName: 'file',
                         maxFilesize: 10,
-                        acceptedFiles: '.uvl,.csv',
+                        acceptedFiles: '.csv',
                         init: function () {
 
                             let fileList = document.getElementById('file-list');
@@ -269,14 +260,12 @@
                             let alerts = document.getElementById('alerts');
 
                             this.on('addedfile', function (file) {
-                                sel=document.getElementById('dataset_type_select');
-
                                 let ext = file.name.split('.').pop();
-                                if ((ext !== 'uvl' && ext !== 'csv')||(sel.value ==='uvl' && ext !== 'uvl')||(sel.value ==='csv' && ext !== 'csv')) {
+                                if (ext !== 'csv') {
                                     this.removeFile(file);
 
                                     let alert = document.createElement('p');
-                                    alert.textContent = 'Invalid file extension: ' + file.name;
+                                    alert.textContent = 'Invalid file extension. Only CSV files are allowed: ' + file.name;
                                     alerts.appendChild(alert);
                                     alerts.style.display = 'block';
                                 }
@@ -464,7 +453,7 @@
                             this.on('error', function (file, response) {
                                 console.error("Error uploading file: ", response);
                                 let alert = document.createElement('p');
-                                alert.textContent = 'UVL not valid: ' + file.name;
+                                alert.textContent = 'CSV file not valid: ' + file.name;
                                 alerts.appendChild(alert);
                                 alerts.style.display = 'block';
                             });
@@ -559,29 +548,4 @@
 {% block scripts %}
     <script src="{{ url_for('zenodo.scripts') }}"></script>
     <script src="{{ url_for('dataset.scripts') }}"></script>
-    <script>
-
-        function toggleCsvVisibility(sel) {
-            const elements = document.getElementsByClassName('csv-only');
-            if (sel.value === 'csv') {
-                for (let i = 0; i < elements.length; i++) {
-                    elements[i].style.display = 'block';
-                }
-            } else {
-                for (let i = 0; i < elements.length; i++) {
-                    elements[i].style.display = 'none';
-                }
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', function () {
-            const sel = document.getElementById('dataset_type_select');
-            if (!sel) return;
-            sel.addEventListener('change', function() {
-                toggleCsvVisibility(sel);
-            });
-            toggleCsvVisibility(sel);
-        });
-
-    </script>
 {% endblock %}

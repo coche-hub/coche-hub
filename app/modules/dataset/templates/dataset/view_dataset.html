@@ -201,11 +201,7 @@
                 <h3> Related publication </h3>
                 
                 David Romero-Organvidez, José A. Galindo, Chico Sundermann, Jose-Miguel Horcas, David Benavides,
-                <i>UVLHub: A feature model data repository using UVL and open science principles</i>,
-                Journal of Systems and Software,
-                2024,
-                112150,
-                ISSN 0164-1212,
+                <i>coche-hub</i>
                 <a href="https://doi.org/10.1016/j.jss.2024.112150" target="_blank">https://doi.org/10.1016/j.jss.2024.112150</a>
 
             </div>
@@ -247,7 +243,8 @@
 
                 <div class="row">
                     <div class="col-12 d-flex justify-content-between align-items-center">
-                        <h4 style="margin-bottom: 0px">{{dataset.get_dataset_type()}}</h4>
+                        <!-- <h4 style="margin-bottom: 0px">{{dataset.get_dataset_type()}}</h4> -->
+                        <h4 style="margin-bottom: 0px">CSV</h4>
                         <h4 style="margin-bottom: 0px;"><span class="badge bg-dark">{{ dataset.get_files_count() }}</span></h4>
                     </div>
                 </div>
@@ -256,32 +253,31 @@
             </div>
             
 
-            {% for feature_model in dataset.feature_models %}
-                {% for file in feature_model.files %}
-                    <div class="list-group-item">
-                        
-                        <div class="row">
-                            <div class="col-12">
+            {% for file in dataset.files %}
+                <div class="list-group-item">
+                    
+                    <div class="row">
+                        <div class="col-12">
 
-                                <div class="row">
-                                    <div class="col-8">
-                                        <i data-feather="file"></i> {{ file.name }}
-                                        <br>
-                                        <small class="text-muted">({{ file.get_formatted_size() }})</small>
-                                    </div>
-                                    <div class="col-2">
-                                        <div id="check_{{ file.id }}">
-                                        </div>
+                            <div class="row">
+                                <div class="col-8">
+                                    <i data-feather="file"></i> {{ file.name }}
+                                    <br>
+                                    <small class="text-muted">({{ file.get_formatted_size() }})</small>
+                                </div>
+                                <div class="col-2">
+                                    <div id="check_{{ file.id }}">
                                     </div>
                                 </div>
-
-                                
                             </div>
-                            <div class="col-12 text-end" >
 
-                                <button onclick="viewFile('{{ file.id }}')" class="btn btn-outline-secondary btn-sm" style="border-radius: 5px;">
-                                    <i data-feather="eye"></i> View
-                                </button>
+                            
+                        </div>
+                        <div class="col-12 text-end" >
+
+                            <button onclick="viewFile('{{ file.id }}')" class="btn btn-outline-secondary btn-sm" style="border-radius: 5px;">
+                                <i data-feather="eye"></i> View
+                            </button>
 
                                 <div class="btn-group" role="group">
                                     <button id="btnGroupDrop{{ file.id }}" type="button" class="btn btn-outline-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" style=" border-radius: 5px;">
@@ -289,7 +285,7 @@
                                     </button>
                                     <ul class="dropdown-menu" aria-labelledby="btnGroupDrop{{ file.id }}">
                                         <li>
-                                            <a class="dropdown-item" href="javascript:void(0);" onclick="checkUVL('{{ file.id }}')">Syntax check</a>
+                                            <a class="dropdown-item" href="javascript:void(0);" onclick="checkCSV('{{ file.id }}')">Format check</a>
                                         </li>
                                         <!--
                                         <li>
@@ -299,31 +295,9 @@
                                     </ul>
                                 </div>
                                 
-                                <div class="btn-group" role="group">
-                                    <button id="btnGroupDropExport{{ file.id }}" type="button" class="btn btn-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" style=" border-radius: 5px;">
-                                        <i data-feather="download"></i> Export
-                                    </button>
-                                    <ul class="dropdown-menu" aria-labelledby="btnGroupDropExport{{ file.id }}">
-                                        <li>
-                                            <a class="dropdown-item" href="{{ url_for('hubfile.download_file', file_id=file.id) }}">
-                                                UVL
-                                            </a>
-                                            <a class="dropdown-item" href="{{ url_for('flamapy.to_glencoe', file_id=file.id) }}">
-                                                Glencoe
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a class="dropdown-item" href="{{ url_for('flamapy.to_cnf', file_id=file.id) }}">
-                                                DIMACS
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a class="dropdown-item" href="{{ url_for('flamapy.to_splot', file_id=file.id) }}">
-                                                SPLOT
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </div>
+                                <a href="{{ url_for('hubfile.download_file', file_id=file.id) }}" class="btn btn-primary btn-sm" style="border-radius: 5px;">
+                                    <i data-feather="download"></i> Download
+                                </a>
                                 
                                 
 
@@ -331,7 +305,6 @@
                         </div>
                     </div>
                 {% endfor %}
-            {% endfor %}
         </div>
         
         
@@ -349,7 +322,7 @@
     <div class="modal-dialog modal-lg" style="height: 80vh; display: flex; align-items: center;">
         <div class="modal-content" style="height: 80vh;">
             <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
-                <h5 class="modal-title" id="fileViewerModalLabel">Feature model view</h5>
+                <h5 class="modal-title" id="fileViewerModalLabel">CSV File View</h5>
                 <div>
                     <a href="#" class="btn btn-outline-primary btn-sm" id="downloadButton"
                         style="margin-right: 5px; margin-bottom: 5px; border-radius: 5px;">
@@ -383,15 +356,23 @@
 
     function viewFile(fileId) {
         fetch(`/file/view/${fileId}`)
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('fileContent').textContent = data.content;
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.text();
+            })
+            .then(content => {
+                document.getElementById('fileContent').textContent = content;
                 currentFileId = fileId;
                 document.getElementById('downloadButton').href = `/file/download/${fileId}`;
                 var modal = new bootstrap.Modal(document.getElementById('fileViewerModal'));
                 modal.show();
             })
-            .catch(error => console.error('Error loading file:', error));
+            .catch(error => {
+                console.error('Error loading file:', error);
+                alert(`Error loading file: ${error.message}`);
+            });
     }
 
     function showLoading() {
@@ -402,11 +383,11 @@
         document.getElementById("loading").style.display = "none";
     }
 
-    function checkUVL(file_id) {
+    function checkCSV(file_id) {
     const outputDiv = document.getElementById('check_' + file_id);
-    outputDiv.innerHTML = ''; // Clear previous output
+    outputDiv.innerHTML = '<span class="badge badge-info">Checking...</span>'; // Show loading state
 
-    fetch(`/flamapy/check_uvl/${file_id}`)
+    fetch(`/flamapy/check_csv/${file_id}`)
         .then(response => {
             return response.json().then(data => ({
                 status: response.status,
@@ -416,21 +397,59 @@
         .then(({ status, data }) => {
             if (status === 400) {
                 // Display errors
+                outputDiv.innerHTML = '';
                 if (data.errors) {
-                    outputDiv.innerHTML = '<span class="badge badge-danger">Errors:</span>';
+                    const errorTitle = document.createElement('span');
+                    errorTitle.className = 'badge badge-danger';
+                    errorTitle.textContent = 'Format Errors:';
+                    outputDiv.appendChild(errorTitle);
+                    outputDiv.appendChild(document.createElement('br'));
+                    
                     data.errors.forEach(error => {
                         const errorElement = document.createElement('span');
                         errorElement.className = 'badge badge-danger';
+                        errorElement.style.marginTop = '2px';
                         errorElement.textContent = error;
                         outputDiv.appendChild(errorElement);
-                        outputDiv.appendChild(document.createElement('br')); // Line break for better readability
+                        outputDiv.appendChild(document.createElement('br'));
                     });
-                } else {
+                }
+                
+                // Display warnings if any
+                if (data.warnings) {
+                    data.warnings.forEach(warning => {
+                        const warningElement = document.createElement('span');
+                        warningElement.className = 'badge badge-warning';
+                        warningElement.style.marginTop = '2px';
+                        warningElement.textContent = warning;
+                        outputDiv.appendChild(warningElement);
+                        outputDiv.appendChild(document.createElement('br'));
+                    });
+                }
+                
+                if (!data.errors && !data.warnings) {
                     outputDiv.innerHTML = `<span class="badge badge-danger">Error: ${data.error}</span>`;
                 }
             } else if (status === 200) {
-                // Display success message
-                outputDiv.innerHTML = '<span class="badge badge-success">Valid Model</span>';
+                // Display success message with file info
+                outputDiv.innerHTML = '';
+                const successBadge = document.createElement('span');
+                successBadge.className = 'badge badge-success';
+                successBadge.textContent = `✓ Valid CSV (${data.rows} rows, ${data.columns} cols)`;
+                outputDiv.appendChild(successBadge);
+                
+                // Show warnings if any
+                if (data.warnings) {
+                    outputDiv.appendChild(document.createElement('br'));
+                    data.warnings.forEach(warning => {
+                        const warningElement = document.createElement('span');
+                        warningElement.className = 'badge badge-warning';
+                        warningElement.style.marginTop = '2px';
+                        warningElement.textContent = warning;
+                        outputDiv.appendChild(warningElement);
+                        outputDiv.appendChild(document.createElement('br'));
+                    });
+                }
             } else {
                 // Handle unexpected status
                 outputDiv.innerHTML = `<span class="badge badge-warning">Unexpected response status: ${status}</span>`;
