@@ -7,8 +7,7 @@ from typing import Optional
 
 from flask import request
 
-from app.modules.auth.services import AuthenticationService
-from app.modules.dataset.models import CSVDataSet, DataSet, DSMetaData, DSViewRecord, UVLDataSet
+from app.modules.dataset.models import Author, Coche, CSVDataSet, DataSet, DSMetaData, DSMetrics, DSViewRecord
 from app.modules.dataset.repositories import (
     AuthorRepository,
     DataSetRepository,
@@ -18,6 +17,7 @@ from app.modules.dataset.repositories import (
     DSViewRecordRepository,
 )
 from app.modules.featuremodel.repositories import FeatureModelRepository, FMMetaDataRepository
+from app.modules.hubfile.models import Hubfile
 from app.modules.hubfile.repositories import (
     HubfileDownloadRecordRepository,
     HubfileRepository,
@@ -49,18 +49,27 @@ class DataSetService(BaseService):
         self.dsviewrecord_repostory = DSViewRecordRepository()
         self.hubfileviewrecord_repository = HubfileViewRecordRepository()
 
-    def move_feature_models(self, dataset: DataSet):
-        current_user = AuthenticationService().get_authenticated_user()
+    # Removed: move_feature_models - replaced by move_files
+
+    def move_files(self, dataset: DataSet):
+        """
+        Move uploaded files from temp folder to dataset folder
+        """
+        current_user = dataset.user
         source_dir = current_user.temp_folder()
 
-        working_dir = os.getenv("WORKING_DIR", "")
-        dest_dir = os.path.join(working_dir, "uploads", f"user_{current_user.id}", f"dataset_{dataset.id}")
-
+        # Create destination directory
+        dest_dir = os.path.join("uploads", f"user_{current_user.id}", f"dataset_{dataset.id}")
         os.makedirs(dest_dir, exist_ok=True)
 
-        for feature_model in dataset.feature_models:
-            uvl_filename = feature_model.fm_meta_data.uvl_filename
-            shutil.move(os.path.join(source_dir, uvl_filename), dest_dir)
+        # Move all CSV files
+        if os.path.exists(source_dir):
+            for filename in os.listdir(source_dir):
+                if filename.endswith(".csv"):
+                    source_path = os.path.join(source_dir, filename)
+                    dest_path = os.path.join(dest_dir, filename)
+                    shutil.move(source_path, dest_path)
+                    logger.info(f"Moved {filename} to {dest_dir}")
 
     def get_synchronized(self, current_user_id: int) -> DataSet:
         return self.repository.get_synchronized(current_user_id)
@@ -92,64 +101,111 @@ class DataSetService(BaseService):
     def total_dataset_views(self) -> int:
         return self.dsviewrecord_repostory.total_dataset_views()
 
-    def create_from_form(self, form, current_user, csv_form=None) -> DataSet:
-        main_author = {
-            "name": f"{current_user.profile.surname}, {current_user.profile.name}",
-            "affiliation": current_user.profile.affiliation,
-            "orcid": current_user.profile.orcid,
-        }
-        try:
-            logger.info(f"Creating dsmetadata...: {form.get_dsmetadata()}")
-            dsmetadata = self.dsmetadata_repository.create(**form.get_dsmetadata())
-            for author_data in [main_author] + form.get_authors():
-                author = self.author_repository.create(commit=False, ds_meta_data_id=dsmetadata.id, **author_data)
-                dsmetadata.authors.append(author)
+    def create_from_form(self, form, current_user) -> DataSet:
+        """
+        Create a new CSV dataset from form data
+        """
+        logger.info("Creating dataset from form...")
 
-            # Create the appropriate DataSet subclass depending on dataset_type
-            dataset_type = getattr(form, "dataset_type", None)
-            selected_type = dataset_type.data if dataset_type is not None else "uvl"
+        # Validate that files were uploaded
+        temp_folder = current_user.temp_folder()
+        if not os.path.exists(temp_folder) or not os.listdir(temp_folder):
+            raise Exception("No files uploaded. Please upload at least one CSV file.")
 
-            if selected_type == "csv":
-                dataset = CSVDataSet(user_id=current_user.id, ds_meta_data_id=dsmetadata.id)
-                # try to read csv-specific fields from csv_form if provided
-                if csv_form is not None:
-                    dataset.has_header = csv_form.has_header.data
-                    dataset.delimiter = csv_form.delimiter.data
-                else:
-                    # fallback to request.form values if csv_form not passed
-                    dataset.has_header = request.form.get("has_header", "y") in ["y", "true", "True", "on", "1"]
-                    dataset.delimiter = request.form.get("delimiter", ",")
-            else:
-                dataset = UVLDataSet(user_id=current_user.id, ds_meta_data_id=dsmetadata.id)
+        # Get CSV-specific fields
+        has_header = form.has_header.data if hasattr(form, "has_header") else True
+        delimiter = form.delimiter.data if hasattr(form, "delimiter") and form.delimiter.data else ","
 
-            # add dataset to session and flush to get dataset.id for related records
-            self.repository.session.add(dataset)
-            self.repository.session.flush()
+        # Count files and calculate metrics
+        csv_files = [f for f in os.listdir(temp_folder) if f.endswith(".csv")]
+        num_files = len(csv_files)
 
-            for feature_model in form.feature_models:
-                uvl_filename = feature_model.uvl_filename.data
-                fmmetadata = self.fmmetadata_repository.create(commit=False, **feature_model.get_fmmetadata())
-                for author_data in feature_model.get_authors():
-                    author = self.author_repository.create(commit=False, fm_meta_data_id=fmmetadata.id, **author_data)
-                    fmmetadata.authors.append(author)
+        # Read first CSV to get number of columns
+        num_columns = 0
+        if csv_files:
+            first_csv_path = os.path.join(temp_folder, csv_files[0])
+            try:
+                import csv
 
-                fm = self.feature_model_repository.create(
-                    commit=False, data_set_id=dataset.id, fm_meta_data_id=fmmetadata.id
+                with open(first_csv_path, "r", encoding="utf-8") as f:
+                    reader = csv.reader(f, delimiter=delimiter)
+                    rows = list(reader)
+                    if rows:
+                        num_columns = len(rows[0])
+            except Exception as e:
+                logger.warning(f"Could not read CSV for metrics: {e}")
+                num_columns = 0
+
+        # Create metrics
+        ds_metrics = DSMetrics(number_of_models=str(num_files), number_of_features=str(num_columns))
+
+        # Get authors
+        authors = []
+        for author_data in form.get_authors():
+            if author_data.get("name"):  # Only add if name is provided
+                author = Author(
+                    name=author_data.get("name"),
+                    affiliation=author_data.get("affiliation", ""),
+                    orcid=author_data.get("orcid", ""),
                 )
+                authors.append(author)
 
-                # associated files in feature model
-                file_path = os.path.join(current_user.temp_folder(), uvl_filename)
-                checksum, size = calculate_checksum_and_size(file_path)
+        # Create metadata
+        ds_meta_data = DSMetaData(**form.get_dsmetadata(), ds_metrics=ds_metrics)
+        ds_meta_data.authors = authors
 
-                file = self.hubfilerepository.create(
-                    commit=False, name=uvl_filename, checksum=checksum, size=size, feature_model_id=fm.id
-                )
-                fm.files.append(file)
-            self.repository.session.commit()
-        except Exception as exc:
-            logger.info(f"Exception creating dataset from form...: {exc}")
-            self.repository.session.rollback()
-            raise exc
+        # Save metadata first to get an ID
+        self.repository.session.add(ds_meta_data)
+        self.repository.session.flush()
+
+        # Create CSV dataset
+        dataset = CSVDataSet(
+            user_id=current_user.id,
+            ds_meta_data_id=ds_meta_data.id,
+            has_header=has_header,
+            delimiter=delimiter,
+        )
+
+        self.repository.session.add(dataset)
+        self.repository.session.flush()
+
+        # Validate CSV files format
+        validation_errors = []
+        for filename in csv_files:
+            file_path = os.path.join(temp_folder, filename)
+            errors = self._validate_csv_format(file_path, has_header, delimiter)
+            if errors:
+                validation_errors.extend([f"{filename}: {error}" for error in errors])
+
+        if validation_errors:
+            error_msg = "CSV validation errors found:\n" + "\n".join(validation_errors)
+            logger.error(error_msg)
+            raise Exception(error_msg)
+
+        # Create hubfiles for uploaded CSV files
+        total_coches_created = 0
+        for filename in csv_files:
+            file_path = os.path.join(temp_folder, filename)
+            file_size = os.path.getsize(file_path)
+
+            # Calculate checksum
+            with open(file_path, "rb") as f:
+                file_checksum = hashlib.md5(f.read()).hexdigest()
+
+            hubfile = Hubfile(
+                name=filename,
+                checksum=file_checksum,
+                size=file_size,
+                data_set_id=dataset.id,
+            )
+            self.repository.session.add(hubfile)
+
+            # Parse CSV and create Coche models
+            coches_created = self._parse_csv_and_create_coches(file_path, has_header, delimiter, dataset.id)
+            total_coches_created += coches_created
+
+        self.repository.session.commit()
+        logger.info(f"Dataset created successfully with {num_files} CSV files and {total_coches_created} coches")
         return dataset
 
     def create_new_version(self, dataset: DataSet, form, current_user, csv_form=None) -> DataSet:
@@ -175,25 +231,16 @@ class DataSetService(BaseService):
                 )
                 dsmetadata.authors.append(new_author)
 
-            # Determine dataset type
-            dataset_type = dataset.get_dataset_type()
-            is_csv = dataset_type == "csv_data_set"
-
-            # Create the new dataset with incremented version
-            if is_csv:
-                new_dataset = CSVDataSet(
-                    user_id=current_user.id, ds_meta_data_id=dsmetadata.id, version=dataset.version + 1
-                )
-                if csv_form is not None:
-                    new_dataset.has_header = csv_form.has_header.data
-                    new_dataset.delimiter = csv_form.delimiter.data
-                else:
-                    new_dataset.has_header = dataset.has_header
-                    new_dataset.delimiter = dataset.delimiter
+            # Create the new CSV dataset with incremented version
+            new_dataset = CSVDataSet(
+                user_id=current_user.id, ds_meta_data_id=dsmetadata.id, version=dataset.version + 1
+            )
+            if csv_form is not None:
+                new_dataset.has_header = csv_form.has_header.data
+                new_dataset.delimiter = csv_form.delimiter.data
             else:
-                new_dataset = UVLDataSet(
-                    user_id=current_user.id, ds_meta_data_id=dsmetadata.id, version=dataset.version + 1
-                )
+                new_dataset.has_header = dataset.has_header
+                new_dataset.delimiter = dataset.delimiter
 
             self.repository.session.add(new_dataset)
             self.repository.session.flush()
@@ -207,86 +254,60 @@ class DataSetService(BaseService):
 
             os.makedirs(new_dataset_dir, exist_ok=True)
 
-            # Copy existing feature models and files
-            for old_fm in dataset.feature_models:
-                # Create new FMMetaData
-                new_fmmetadata = self.fmmetadata_repository.create(
-                    commit=False,
-                    uvl_filename=old_fm.fm_meta_data.uvl_filename,
-                    title=old_fm.fm_meta_data.title,
-                    description=old_fm.fm_meta_data.description,
-                    publication_type=old_fm.fm_meta_data.publication_type.name,
-                    publication_doi=old_fm.fm_meta_data.publication_doi,
-                    tags=old_fm.fm_meta_data.tags,
-                    uvl_version=old_fm.fm_meta_data.uvl_version,
-                )
+            # Copy existing files directly from old dataset
+            for old_file in dataset.files:
+                # Copy physical file
+                old_file_path = os.path.join(old_dataset_dir, old_file.name)
+                new_file_path = os.path.join(new_dataset_dir, old_file.name)
 
-                # Copy authors
-                for author in old_fm.fm_meta_data.authors:
-                    new_author = self.author_repository.create(
-                        commit=False,
-                        fm_meta_data_id=new_fmmetadata.id,
-                        name=author.name,
-                        affiliation=author.affiliation,
-                        orcid=author.orcid,
+                if os.path.exists(old_file_path):
+                    shutil.copy2(old_file_path, new_file_path)
+
+                    # Create new file record linked to new dataset
+                    new_file = Hubfile(
+                        name=old_file.name,
+                        checksum=old_file.checksum,
+                        size=old_file.size,
+                        data_set_id=new_dataset.id,
                     )
-                    new_fmmetadata.authors.append(new_author)
-
-                # Create new feature model
-                new_fm = self.feature_model_repository.create(
-                    commit=False, data_set_id=new_dataset.id, fm_meta_data_id=new_fmmetadata.id
-                )
-
-                # Copy files
-                for old_file in old_fm.files:
-                    # Copy physical file
-                    old_file_path = os.path.join(old_dataset_dir, old_file.name)
-                    new_file_path = os.path.join(new_dataset_dir, old_file.name)
-
-                    if os.path.exists(old_file_path):
-                        shutil.copy2(old_file_path, new_file_path)
-
-                        # Create new file record
-                        new_file = self.hubfilerepository.create(
-                            commit=False,
-                            name=old_file.name,
-                            checksum=old_file.checksum,
-                            size=old_file.size,
-                            feature_model_id=new_fm.id,
-                        )
-                        new_fm.files.append(new_file)
+                    self.repository.session.add(new_file)
 
             # Add new uploaded files from temp folder
+            total_coches_created = 0
             temp_folder = current_user.temp_folder()
+
+            # Validate CSV files format before processing
+            validation_errors = []
+            if os.path.exists(temp_folder):
+                temp_files = [f for f in os.listdir(temp_folder) if f.endswith(".csv")]
+                for filename in temp_files:
+                    file_path = os.path.join(temp_folder, filename)
+                    errors = self._validate_csv_format(file_path, new_dataset.has_header, new_dataset.delimiter)
+                    if errors:
+                        validation_errors.extend([f"{filename}: {error}" for error in errors])
+
+            if validation_errors:
+                error_msg = "CSV validation errors found:\n" + "\n".join(validation_errors)
+                logger.error(error_msg)
+                raise Exception(error_msg)
+
             if os.path.exists(temp_folder):
                 temp_files = os.listdir(temp_folder)
                 for filename in temp_files:
                     file_path = os.path.join(temp_folder, filename)
                     if os.path.isfile(file_path):
-                        # Create simple metadata for new files
-                        new_fmmetadata = self.fmmetadata_repository.create(
-                            commit=False,
-                            uvl_filename=filename,
-                            title=filename.rsplit(".", 1)[0],
-                            description="Added in version update",
-                            publication_type="NONE",
-                            publication_doi="",
-                            tags="",
-                            uvl_version="",
-                        )
-
-                        new_fm = self.feature_model_repository.create(
-                            commit=False, data_set_id=new_dataset.id, fm_meta_data_id=new_fmmetadata.id
-                        )
-
                         checksum, size = calculate_checksum_and_size(file_path)
-                        new_file = self.hubfilerepository.create(
-                            commit=False, name=filename, checksum=checksum, size=size, feature_model_id=new_fm.id
+
+                        # Create new file record linked to dataset
+                        new_file = Hubfile(
+                            name=filename,
+                            checksum=checksum,
+                            size=size,
+                            data_set_id=new_dataset.id,
                         )
-                        new_fm.files.append(new_file)
+                        self.repository.session.add(new_file)
 
                         # Move the file from temp folder to new dataset directory
-                        # Only if it doesn't already exist in the destination
                         new_file_destination = os.path.join(new_dataset_dir, filename)
                         if not os.path.exists(new_file_destination):
                             shutil.move(file_path, new_file_destination)
@@ -294,8 +315,16 @@ class DataSetService(BaseService):
                             # File already exists, just remove from temp
                             os.remove(file_path)
 
+                        # Parse CSV and create Coche models for new files
+                        if filename.endswith(".csv"):
+                            coches_created = self._parse_csv_and_create_coches(
+                                new_file_destination, new_dataset.has_header, new_dataset.delimiter, new_dataset.id
+                            )
+                            total_coches_created += coches_created
+
             self.repository.session.commit()
-            logger.info(f"Successfully created new version: {new_dataset.id} with version {new_dataset.version}")
+            msg = f"Successfully created new version: {new_dataset.id} with version {new_dataset.version} and {total_coches_created} new coches"  # noqa: E501
+            logger.info(msg)
 
         except Exception as exc:
             logger.error(f"Exception creating new version of dataset: {exc}")
@@ -304,10 +333,169 @@ class DataSetService(BaseService):
 
         return new_dataset
 
+    def _parse_csv_and_create_coches(self, file_path: str, has_header: bool, delimiter: str, dataset_id: int) -> int:
+        """
+        Parse CSV file and create Coche models for each row.
+        Returns the number of coches created.
+        """
+        import csv
+        from datetime import datetime
+
+        coches_created = 0
+
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                reader = csv.DictReader(f, delimiter=delimiter) if has_header else csv.reader(f, delimiter=delimiter)
+
+                for row in reader:
+                    try:
+                        if has_header:
+                            # Map CSV columns to Coche model fields
+                            coche = Coche(
+                                dataset_id=dataset_id,
+                                modelo=row.get("Modelo", "").strip(),
+                                marca=row.get("Marca", "").strip(),
+                                motor=row.get("Motor", "").strip(),
+                                consumo=float(row.get("Consumo", 0)),
+                                combustible=row.get("Combustible", "").strip(),
+                                comienzo_de_produccion=int(row.get("Comienzo de producción", 0)),
+                                fin_de_produccion=(
+                                    int(row.get("Fin de producción", 0))
+                                    if row.get("Fin de producción", "").strip()
+                                    else 9999
+                                ),
+                                asientos=int(row.get("Asientos", 0)),
+                                puertas=int(row.get("Puertas", 0)),
+                                peso=int(row.get("Peso (kg)", 0)),
+                                carga_max=int(row.get("Carga máxima (kg)", 0)),
+                                pais_de_origen=row.get("País de origen", "").strip(),
+                                precio_estimado=int(row.get("Precio estimado (€)", 0)),
+                                matricula=row.get("Matrícula", "").strip(),
+                                fecha_matriculacion=datetime.strptime(
+                                    row.get("Fecha de matriculación", ""), "%d/%m/%Y"
+                                ),
+                            )
+                        else:
+                            # If no header, assume columns are in order
+                            coche = Coche(
+                                dataset_id=dataset_id,
+                                modelo=row[0].strip(),
+                                marca=row[1].strip(),
+                                motor=row[2].strip(),
+                                consumo=float(row[3]),
+                                combustible=row[4].strip(),
+                                comienzo_de_produccion=int(row[5]),
+                                fin_de_produccion=int(row[6]) if row[6].strip() else 9999,
+                                asientos=int(row[7]),
+                                puertas=int(row[8]),
+                                peso=int(row[9]),
+                                carga_max=int(row[10]),
+                                pais_de_origen=row[11].strip(),
+                                precio_estimado=int(row[12]),
+                                matricula=row[13].strip(),
+                                fecha_matriculacion=datetime.strptime(row[14], "%d/%m/%Y"),
+                            )
+
+                        self.repository.session.add(coche)
+                        coches_created += 1
+
+                    except (ValueError, KeyError, IndexError) as e:
+                        logger.warning(f"Skipping row due to parsing error: {e}")
+                        continue
+        except Exception as e:
+            logger.error(f"Error parsing CSV file {file_path}: {e}")
+
+        return coches_created
+
+    def _validate_csv_format(self, file_path: str, has_header: bool, delimiter: str) -> list:
+        """
+        Validate CSV file format and structure.
+        Returns a list of error messages (empty list if valid).
+        """
+        import csv
+        from io import StringIO
+
+        errors = []
+
+        try:
+            # Try to read the file with different encodings
+            content = None
+            for encoding in ["utf-8", "latin-1", "iso-8859-1"]:
+                try:
+                    with open(file_path, "r", encoding=encoding) as f:
+                        content = f.read()
+                        break
+                except UnicodeDecodeError:
+                    continue
+
+            if content is None:
+                errors.append("Unable to read file with common encodings (UTF-8, Latin-1, ISO-8859-1)")
+                return errors
+
+            # Parse CSV
+            reader = csv.reader(StringIO(content), delimiter=delimiter)
+            rows = list(reader)
+
+            if not rows:
+                errors.append("File is empty")
+                return errors
+
+            # Check for consistent column count
+            non_empty_rows = [row for row in rows if any(cell.strip() for cell in row)]
+            if not non_empty_rows:
+                errors.append("File contains no data")
+                return errors
+
+            # Validate required headers
+            if has_header:
+                REQUIRED_HEADERS = [
+                    "Modelo",
+                    "Marca",
+                    "Motor",
+                    "Consumo",
+                    "Combustible",
+                    "Comienzo de producción",
+                    "Fin de producción",
+                    "Asientos",
+                    "Puertas",
+                    "Peso (kg)",
+                    "Carga máxima (kg)",
+                    "País de origen",
+                    "Precio estimado (€)",
+                    "Matrícula",
+                    "Fecha de matriculación",
+                ]
+
+                header_row = non_empty_rows[0]
+
+                # Check exact column count
+                if len(header_row) != 15:
+                    errors.append(f"CSV must have exactly 15 columns, found {len(header_row)}")
+
+                # Check all required headers present
+                missing = [h for h in REQUIRED_HEADERS if h not in header_row]
+                if missing:
+                    errors.append(f"Missing required headers: {', '.join(missing)}")
+
+                # Check for unexpected headers
+                extra = [h for h in header_row if h and h not in REQUIRED_HEADERS]
+                if extra:
+                    errors.append(f"Unexpected headers: {', '.join(extra)}")
+
+            expected_cols = len(non_empty_rows[0])
+            for i, row in enumerate(non_empty_rows[1:], start=2):
+                if len(row) != expected_cols:
+                    errors.append(f"Line {i}: Expected {expected_cols} columns, found {len(row)}")
+
+        except Exception as e:
+            errors.append(f"Error validating file: {str(e)}")
+
+        return errors
+
     def update_dsmetadata(self, id, **kwargs):
         return self.dsmetadata_repository.update(id, **kwargs)
 
-    def get_uvlhub_doi(self, dataset: DataSet) -> str:
+    def get_dataset_url(self, dataset: DataSet) -> str:
         domain = os.getenv("DOMAIN", "localhost")
         return f"http://{domain}/doi/{dataset.ds_meta_data.dataset_doi}"
 

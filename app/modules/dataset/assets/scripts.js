@@ -237,3 +237,162 @@ var currentId = 0;
             let orcidRegex = /^\d{4}-\d{4}-\d{4}-\d{4}$/;
             return orcidRegex.test(orcid);
         }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Initialize Dropzone
+            Dropzone.autoDiscover = false;
+
+            const dropzoneElement = document.getElementById('myDropzone');
+            if (!dropzoneElement) {
+                console.error('Dropzone element not found');
+                return;
+            }
+
+            const myDropzone = new Dropzone("#myDropzone", {
+                url: "/dataset/file/upload",
+                autoProcessQueue: false,
+                uploadMultiple: true,
+                parallelUploads: 10,
+                maxFilesize: 100,
+                acceptedFiles: '.csv',  // Solo CSV
+                addRemoveLinks: true,
+                init: function () {
+                    var submitButton = document.getElementById("submit_btn");
+                    var myDropzone = this;
+
+                    submitButton.addEventListener("click", function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        if (myDropzone.getQueuedFiles().length > 0) {
+                            myDropzone.processQueue();
+                        } else {
+                            // No files to upload, submit form directly
+                            submitFormWithoutFiles();
+                        }
+                    });
+
+                    this.on("addedfile", function (file) {
+                        console.log("File added: ", file);
+                    });
+
+                    this.on("complete", function (file) {
+                        if (this.getUploadingFiles().length === 0 && this.getQueuedFiles().length === 0) {
+                            submitFormWithoutFiles();
+                        }
+                    });
+
+                    this.on("error", function (file, message) {
+                        console.error("Upload error: ", message);
+                        write_upload_error(message);
+                    });
+                }
+            });
+
+            function submitFormWithoutFiles() {
+                show_loading();
+
+                // Get form data
+                const form = document.getElementById('upload_form');
+                const formData = new FormData(form);
+
+                // Remove feature_models fields (legacy from UVL)
+                const keysToDelete = [];
+                for (let key of formData.keys()) {
+                    if (key.startsWith('feature_models-') || key.startsWith('authors-')) {
+                        keysToDelete.push(key);
+                    }
+                }
+                keysToDelete.forEach(key => formData.delete(key));
+
+                // Add files from temp folder
+                const uploadedFiles = myDropzone.getAcceptedFiles();
+                uploadedFiles.forEach((file, index) => {
+                    formData.append(`files[${index}]`, file.upload.filename || file.name);
+                });
+
+                // Add authors
+                const authorForms = document.querySelectorAll('.author-form');
+                authorForms.forEach((authorForm, index) => {
+                    const name = authorForm.querySelector('input[name*="name"]');
+                    const affiliation = authorForm.querySelector('input[name*="affiliation"]');
+                    const orcid = authorForm.querySelector('input[name*="orcid"]');
+                    
+                    if (name && name.value.trim()) {
+                        formData.append(`authors-${index}-name`, name.value);
+                        formData.append(`authors-${index}-affiliation`, affiliation ? affiliation.value : '');
+                        formData.append(`authors-${index}-orcid`, orcid ? orcid.value : '');
+                    }
+                });
+
+                console.log('Submitting form data:', Object.fromEntries(formData));
+
+                fetch('/dataset/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (response.ok) {
+                        console.log('Dataset sent successfully');
+                        response.json().then(data => {
+                            console.log(data.message);
+                            window.location.href = "/dataset/list";
+                        });
+                    } else {
+                        response.json().then(data => {
+                            console.error('Error response:', data);
+                            hide_loading();
+                            
+                            // Better error handling
+                            let errorMessage = 'Unknown error';
+                            if (typeof data.message === 'string') {
+                                errorMessage = data.message;
+                            } else if (typeof data.message === 'object') {
+                                // Convert object errors to readable format
+                                errorMessage = JSON.stringify(data.message, null, 2);
+                                
+                                // Try to extract field-specific errors
+                                const errors = [];
+                                for (let field in data.message) {
+                                    if (Array.isArray(data.message[field])) {
+                                        errors.push(`${field}: ${data.message[field].join(', ')}`);
+                                    }
+                                }
+                                if (errors.length > 0) {
+                                    errorMessage = errors.join('\n');
+                                }
+                            } else if (data.error) {
+                                errorMessage = data.error;
+                            }
+                            
+                            write_upload_error(errorMessage);
+                        }).catch(err => {
+                            console.error('Error parsing response:', err);
+                            hide_loading();
+                            write_upload_error('Error parsing server response');
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error in POST request:', error);
+                    hide_loading();
+                    write_upload_error('Network error: ' + error.message);
+                });
+            }
+
+            function show_loading() {
+                document.getElementById('loading').style.display = 'block';
+            }
+
+            function hide_loading() {
+                document.getElementById('loading').style.display = 'none';
+            }
+
+            function write_upload_error(message) {
+                const errorDiv = document.getElementById('upload_error');
+                if (errorDiv) {
+                    errorDiv.innerHTML = `<div class="alert alert-danger">${message}</div>`;
+                    errorDiv.style.display = 'block';
+                }
+            }
+        });
