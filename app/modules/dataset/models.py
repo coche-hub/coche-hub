@@ -35,13 +35,17 @@ class Author(db.Model):
     affiliation = db.Column(db.String(120))
     orcid = db.Column(db.String(120))
     ds_meta_data_id = db.Column(db.Integer, db.ForeignKey("ds_meta_data.id"))
-    fm_meta_data_id = db.Column(db.Integer, db.ForeignKey("fm_meta_data.id"))  # Legacy - kept for backward compatibility
+    fm_meta_data_id = db.Column(
+        db.Integer, db.ForeignKey("fm_meta_data.id")
+    )  # Legacy - still used by featuremodel module
 
     def to_dict(self):
         return {"name": self.name, "affiliation": self.affiliation, "orcid": self.orcid}
 
+
 class Coche(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    dataset_id = db.Column(db.Integer, db.ForeignKey("data_set.id", ondelete="CASCADE"), nullable=False)
     modelo = db.Column(db.String(120), nullable=False)
     marca = db.Column(db.String(120), nullable=False)
     motor = db.Column(db.String(120), nullable=False)
@@ -58,8 +62,12 @@ class Coche(db.Model):
     matricula = db.Column(db.String(7), nullable=False)
     fecha_matriculacion = db.Column(db.DateTime, nullable=False)
 
+    # Relationship to DataSet
+    dataset = db.relationship("DataSet", backref=db.backref("coches", passive_deletes=True))
+
     def __repr__(self):
         return f"Coche<{self.modelo} {self.marca} {self.matricula}>"
+
 
 class DSMetrics(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -97,7 +105,7 @@ class DataSet(db.Model):
     DataSetType = db.Column(db.String(50))
 
     ds_meta_data = db.relationship("DSMetaData", backref=db.backref("data_set", uselist=False))
-    
+
     # Relación directa con archivos (reemplaza feature_models)
     files = db.relationship("Hubfile", backref="dataset", lazy=True, cascade="all, delete")
 
@@ -145,10 +153,10 @@ class DataSet(db.Model):
 
         return SizeService().get_human_readable_size(self.get_file_total_size())
 
-    def get_uvlhub_doi(self):
+    def get_dataset_url(self):
         from app.modules.dataset.services import DataSetService
 
-        return DataSetService().get_uvlhub_doi(self)
+        return DataSetService().get_dataset_url(self)
 
     def to_dict(self):
         return {
@@ -162,7 +170,7 @@ class DataSet(db.Model):
             "publication_doi": self.ds_meta_data.publication_doi,
             "dataset_doi": self.ds_meta_data.dataset_doi,
             "tags": self.ds_meta_data.tags.split(",") if self.ds_meta_data.tags else [],
-            "url": self.get_uvlhub_doi(),
+            "url": self.get_dataset_url(),
             "download": f'{request.host_url.rstrip("/")}/dataset/download/{self.id}',
             "zenodo": self.get_zenodo_url(),
             "files": [file.to_dict() for file in self.files],

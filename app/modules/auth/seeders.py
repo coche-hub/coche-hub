@@ -12,24 +12,24 @@ class AuthSeeder(BaseSeeder):
         # Check if users already exist
         existing_users = []
         users_to_create = []
-        
+
         user_data = [
             ("user1@example.com", "1234"),
             ("user2@example.com", "1234"),
         ]
-        
+
         for email, password in user_data:
             existing_user = User.query.filter_by(email=email).first()
             if existing_user:
                 existing_users.append(existing_user)
             else:
                 users_to_create.append(User(email=email, password=password))
-        
+
         # Seed only new users
         seeded_users = []
         if users_to_create:
             seeded_users = self.seed(users_to_create)
-        
+
         # Combine existing and newly seeded users
         all_users = existing_users + seeded_users
 

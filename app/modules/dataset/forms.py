@@ -33,7 +33,7 @@ class DataSetForm(FlaskForm):
     dataset_doi = StringField("Dataset DOI", validators=[Optional(), URL()])
     tags = StringField("Tags (separated by commas)")
     authors = FieldList(FormField(AuthorForm))
-    
+
     # CSV-specific fields (estos ahora están en el formulario base)
     has_header = BooleanField("Has Header", default=True)
     delimiter = StringField("Delimiter", default=",")
@@ -72,7 +72,7 @@ class EditDataSetForm(FlaskForm):
     publication_doi = StringField("Publication DOI", validators=[Optional(), URL()])
     dataset_doi = StringField("Dataset DOI", validators=[Optional(), URL()])
     tags = StringField("Tags (separated by commas)")
-    
+
     # CSV-specific fields
     has_header = BooleanField("Has Header", default=True)
     delimiter = StringField("Delimiter", default=",")

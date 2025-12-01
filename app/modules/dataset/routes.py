@@ -7,16 +7,7 @@ import uuid
 from datetime import datetime, timezone
 from zipfile import ZipFile
 
-from flask import (
-    abort,
-    jsonify,
-    make_response,
-    redirect,
-    render_template,
-    request,
-    send_from_directory,
-    url_for,
-)
+from flask import abort, jsonify, make_response, redirect, render_template, request, send_from_directory, url_for
 from flask_login import current_user, login_required
 
 from app.modules.dataset import dataset_bp
@@ -123,7 +114,7 @@ def upload():
     file = request.files["file"]
     temp_folder = current_user.temp_folder()
 
-    if not file or (not file.filename.endswith(".uvl") and not file.filename.endswith(".csv")):
+    if not file or not file.filename.endswith(".csv"):
         return jsonify({"message": "No valid file"}), 400
 
     # create temp folder
@@ -151,7 +142,7 @@ def upload():
     return (
         jsonify(
             {
-                "message": "UVL uploaded and validated successfully",
+                "message": "CSV uploaded and validated successfully",
                 "filename": new_filename,
             }
         ),
@@ -277,14 +268,14 @@ def get_unsynchronized_dataset(dataset_id):
 @login_required
 def edit_dataset(dataset_id):
     dataset = dataset_service.get_or_404(dataset_id)
-    
+
     # Check ownership
     if dataset.user_id != current_user.id:
         return jsonify({"message": "You are not the owner of this dataset"}), 403
 
     form = EditDataSetForm()
     # Check if dataset is CSV type (all datasets are now CSV)
-    is_csv = hasattr(dataset, 'has_header') and hasattr(dataset, 'delimiter')
+    is_csv = hasattr(dataset, "has_header") and hasattr(dataset, "delimiter")
 
     if request.method == "POST":
         if not form.validate_on_submit():
@@ -293,9 +284,7 @@ def edit_dataset(dataset_id):
         try:
             logger.info("Creating new version of dataset...")
             # create_new_version now handles CSV fields from form directly
-            new_dataset = dataset_service.create_new_version(
-                dataset=dataset, form=form, current_user=current_user
-            )
+            new_dataset = dataset_service.create_new_version(dataset=dataset, form=form, current_user=current_user)
             logger.info(f"Created new version: {new_dataset}")
         except Exception as exc:
             logger.exception(f"Exception while creating new version: {exc}")

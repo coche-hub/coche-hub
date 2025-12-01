@@ -7,8 +7,7 @@ from typing import Optional
 
 from flask import request
 
-from app.modules.auth.services import AuthenticationService
-from app.modules.dataset.models import Author, CSVDataSet, DataSet, DSMetaData, DSMetrics, DSViewRecord, Coche
+from app.modules.dataset.models import Author, Coche, CSVDataSet, DataSet, DSMetaData, DSMetrics, DSViewRecord
 from app.modules.dataset.repositories import (
     AuthorRepository,
     DataSetRepository,
@@ -106,7 +105,7 @@ class DataSetService(BaseService):
         """
         Create a new CSV dataset from form data
         """
-        logger.info(f"Creating dataset from form...")
+        logger.info("Creating dataset from form...")
 
         # Validate that files were uploaded
         temp_folder = current_user.temp_folder()
@@ -138,9 +137,7 @@ class DataSetService(BaseService):
                 num_columns = 0
 
         # Create metrics
-        ds_metrics = DSMetrics(
-            number_of_models=str(num_files), number_of_features=str(num_columns)
-        )
+        ds_metrics = DSMetrics(number_of_models=str(num_files), number_of_features=str(num_columns))
 
         # Get authors
         authors = []
@@ -154,9 +151,7 @@ class DataSetService(BaseService):
                 authors.append(author)
 
         # Create metadata
-        ds_meta_data = DSMetaData(
-            **form.get_dsmetadata(), ds_metrics=ds_metrics
-        )
+        ds_meta_data = DSMetaData(**form.get_dsmetadata(), ds_metrics=ds_metrics)
         ds_meta_data.authors = authors
 
         # Save metadata first to get an ID
@@ -181,7 +176,7 @@ class DataSetService(BaseService):
             errors = self._validate_csv_format(file_path, has_header, delimiter)
             if errors:
                 validation_errors.extend([f"{filename}: {error}" for error in errors])
-        
+
         if validation_errors:
             error_msg = "CSV validation errors found:\n" + "\n".join(validation_errors)
             logger.error(error_msg)
@@ -194,8 +189,6 @@ class DataSetService(BaseService):
             file_size = os.path.getsize(file_path)
 
             # Calculate checksum
-            import hashlib
-
             with open(file_path, "rb") as f:
                 file_checksum = hashlib.md5(f.read()).hexdigest()
 
@@ -208,7 +201,7 @@ class DataSetService(BaseService):
             self.repository.session.add(hubfile)
 
             # Parse CSV and create Coche models
-            coches_created = self._parse_csv_and_create_coches(file_path, has_header, delimiter)
+            coches_created = self._parse_csv_and_create_coches(file_path, has_header, delimiter, dataset.id)
             total_coches_created += coches_created
 
         self.repository.session.commit()
@@ -282,29 +275,29 @@ class DataSetService(BaseService):
             # Add new uploaded files from temp folder
             total_coches_created = 0
             temp_folder = current_user.temp_folder()
-            
+
             # Validate CSV files format before processing
             validation_errors = []
             if os.path.exists(temp_folder):
-                temp_files = [f for f in os.listdir(temp_folder) if f.endswith('.csv')]
+                temp_files = [f for f in os.listdir(temp_folder) if f.endswith(".csv")]
                 for filename in temp_files:
                     file_path = os.path.join(temp_folder, filename)
                     errors = self._validate_csv_format(file_path, new_dataset.has_header, new_dataset.delimiter)
                     if errors:
                         validation_errors.extend([f"{filename}: {error}" for error in errors])
-            
+
             if validation_errors:
                 error_msg = "CSV validation errors found:\n" + "\n".join(validation_errors)
                 logger.error(error_msg)
                 raise Exception(error_msg)
-            
+
             if os.path.exists(temp_folder):
                 temp_files = os.listdir(temp_folder)
                 for filename in temp_files:
                     file_path = os.path.join(temp_folder, filename)
                     if os.path.isfile(file_path):
                         checksum, size = calculate_checksum_and_size(file_path)
-                        
+
                         # Create new file record linked to dataset
                         new_file = Hubfile(
                             name=filename,
@@ -321,18 +314,17 @@ class DataSetService(BaseService):
                         else:
                             # File already exists, just remove from temp
                             os.remove(file_path)
-                        
+
                         # Parse CSV and create Coche models for new files
-                        if filename.endswith('.csv'):
+                        if filename.endswith(".csv"):
                             coches_created = self._parse_csv_and_create_coches(
-                                new_file_destination, 
-                                new_dataset.has_header, 
-                                new_dataset.delimiter
+                                new_file_destination, new_dataset.has_header, new_dataset.delimiter, new_dataset.id
                             )
                             total_coches_created += coches_created
 
             self.repository.session.commit()
-            logger.info(f"Successfully created new version: {new_dataset.id} with version {new_dataset.version} and {total_coches_created} new coches")
+            msg = f"Successfully created new version: {new_dataset.id} with version {new_dataset.version} and {total_coches_created} new coches"  # noqa: E501
+            logger.info(msg)
 
         except Exception as exc:
             logger.error(f"Exception creating new version of dataset: {exc}")
@@ -341,44 +333,52 @@ class DataSetService(BaseService):
 
         return new_dataset
 
-    def _parse_csv_and_create_coches(self, file_path: str, has_header: bool, delimiter: str) -> int:
+    def _parse_csv_and_create_coches(self, file_path: str, has_header: bool, delimiter: str, dataset_id: int) -> int:
         """
         Parse CSV file and create Coche models for each row.
         Returns the number of coches created.
         """
         import csv
         from datetime import datetime
-        
+
         coches_created = 0
-        
+
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 reader = csv.DictReader(f, delimiter=delimiter) if has_header else csv.reader(f, delimiter=delimiter)
-                
+
                 for row in reader:
                     try:
                         if has_header:
                             # Map CSV columns to Coche model fields
                             coche = Coche(
-                                modelo=row.get('Modelo', '').strip(),
-                                marca=row.get('Marca', '').strip(),
-                                motor=row.get('Motor', '').strip(),
-                                consumo=float(row.get('Consumo', 0)),
-                                combustible=row.get('Combustible', '').strip(),
-                                comienzo_de_produccion=int(row.get('Comienzo de producción', 0)),
-                                fin_de_produccion=int(row.get('Fin de producción', 0)) if row.get('Fin de producción', '').strip() else 9999,
-                                asientos=int(row.get('Asientos', 0)),
-                                puertas=int(row.get('Puertas', 0)),
-                                peso=int(row.get('Peso (kg)', 0)),
-                                carga_max=int(row.get('Carga máxima (kg)', 0)),
-                                pais_de_origen=row.get('País de origen', '').strip(),
-                                precio_estimado=int(row.get('Precio estimado (€)', 0)),
-                                matricula=row.get('Matrícula', '').strip(),
-                                fecha_matriculacion=datetime.strptime(row.get('Fecha de matriculación', ''), '%d/%m/%Y')
+                                dataset_id=dataset_id,
+                                modelo=row.get("Modelo", "").strip(),
+                                marca=row.get("Marca", "").strip(),
+                                motor=row.get("Motor", "").strip(),
+                                consumo=float(row.get("Consumo", 0)),
+                                combustible=row.get("Combustible", "").strip(),
+                                comienzo_de_produccion=int(row.get("Comienzo de producción", 0)),
+                                fin_de_produccion=(
+                                    int(row.get("Fin de producción", 0))
+                                    if row.get("Fin de producción", "").strip()
+                                    else 9999
+                                ),
+                                asientos=int(row.get("Asientos", 0)),
+                                puertas=int(row.get("Puertas", 0)),
+                                peso=int(row.get("Peso (kg)", 0)),
+                                carga_max=int(row.get("Carga máxima (kg)", 0)),
+                                pais_de_origen=row.get("País de origen", "").strip(),
+                                precio_estimado=int(row.get("Precio estimado (€)", 0)),
+                                matricula=row.get("Matrícula", "").strip(),
+                                fecha_matriculacion=datetime.strptime(
+                                    row.get("Fecha de matriculación", ""), "%d/%m/%Y"
+                                ),
                             )
                         else:
                             # If no header, assume columns are in order
                             coche = Coche(
+                                dataset_id=dataset_id,
                                 modelo=row[0].strip(),
                                 marca=row[1].strip(),
                                 motor=row[2].strip(),
@@ -393,20 +393,20 @@ class DataSetService(BaseService):
                                 pais_de_origen=row[11].strip(),
                                 precio_estimado=int(row[12]),
                                 matricula=row[13].strip(),
-                                fecha_matriculacion=datetime.strptime(row[14], '%d/%m/%Y')
+                                fecha_matriculacion=datetime.strptime(row[14], "%d/%m/%Y"),
                             )
-                        
+
                         self.repository.session.add(coche)
                         coches_created += 1
-                        
+
                     except (ValueError, KeyError, IndexError) as e:
                         logger.warning(f"Skipping row due to parsing error: {e}")
                         continue
         except Exception as e:
             logger.error(f"Error parsing CSV file {file_path}: {e}")
-            
+
         return coches_created
-    
+
     def _validate_csv_format(self, file_path: str, has_header: bool, delimiter: str) -> list:
         """
         Validate CSV file format and structure.
@@ -414,52 +414,88 @@ class DataSetService(BaseService):
         """
         import csv
         from io import StringIO
-        
+
         errors = []
-        
+
         try:
             # Try to read the file with different encodings
             content = None
-            for encoding in ['utf-8', 'latin-1', 'iso-8859-1']:
+            for encoding in ["utf-8", "latin-1", "iso-8859-1"]:
                 try:
-                    with open(file_path, 'r', encoding=encoding) as f:
+                    with open(file_path, "r", encoding=encoding) as f:
                         content = f.read()
                         break
                 except UnicodeDecodeError:
                     continue
-            
+
             if content is None:
                 errors.append("Unable to read file with common encodings (UTF-8, Latin-1, ISO-8859-1)")
                 return errors
-            
+
             # Parse CSV
             reader = csv.reader(StringIO(content), delimiter=delimiter)
             rows = list(reader)
-            
+
             if not rows:
                 errors.append("File is empty")
                 return errors
-            
+
             # Check for consistent column count
             non_empty_rows = [row for row in rows if any(cell.strip() for cell in row)]
             if not non_empty_rows:
                 errors.append("File contains no data")
                 return errors
-            
+
+            # Validate required headers
+            if has_header:
+                REQUIRED_HEADERS = [
+                    "Modelo",
+                    "Marca",
+                    "Motor",
+                    "Consumo",
+                    "Combustible",
+                    "Comienzo de producción",
+                    "Fin de producción",
+                    "Asientos",
+                    "Puertas",
+                    "Peso (kg)",
+                    "Carga máxima (kg)",
+                    "País de origen",
+                    "Precio estimado (€)",
+                    "Matrícula",
+                    "Fecha de matriculación",
+                ]
+
+                header_row = non_empty_rows[0]
+
+                # Check exact column count
+                if len(header_row) != 15:
+                    errors.append(f"CSV must have exactly 15 columns, found {len(header_row)}")
+
+                # Check all required headers present
+                missing = [h for h in REQUIRED_HEADERS if h not in header_row]
+                if missing:
+                    errors.append(f"Missing required headers: {', '.join(missing)}")
+
+                # Check for unexpected headers
+                extra = [h for h in header_row if h and h not in REQUIRED_HEADERS]
+                if extra:
+                    errors.append(f"Unexpected headers: {', '.join(extra)}")
+
             expected_cols = len(non_empty_rows[0])
             for i, row in enumerate(non_empty_rows[1:], start=2):
                 if len(row) != expected_cols:
                     errors.append(f"Line {i}: Expected {expected_cols} columns, found {len(row)}")
-            
+
         except Exception as e:
             errors.append(f"Error validating file: {str(e)}")
-        
+
         return errors
 
     def update_dsmetadata(self, id, **kwargs):
         return self.dsmetadata_repository.update(id, **kwargs)
 
-    def get_uvlhub_doi(self, dataset: DataSet) -> str:
+    def get_dataset_url(self, dataset: DataSet) -> str:
         domain = os.getenv("DOMAIN", "localhost")
         return f"http://{domain}/doi/{dataset.ds_meta_data.dataset_doi}"
 
