@@ -42,3 +42,4 @@ profile = "black"
 [tool.flake8]
 max-line-length = 120
 extend-ignore = ["E203", "W503"]
+per-file-ignores = ["app/modules/dataset/tests/test_unit.py:E501"]

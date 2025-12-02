@@ -7,20 +7,11 @@ import uuid
 from datetime import datetime, timezone
 from zipfile import ZipFile
 
-from flask import (
-    abort,
-    jsonify,
-    make_response,
-    redirect,
-    render_template,
-    request,
-    send_from_directory,
-    url_for,
-)
+from flask import abort, jsonify, make_response, redirect, render_template, request, send_from_directory, url_for
 from flask_login import current_user, login_required
 
 from app.modules.dataset import dataset_bp
-from app.modules.dataset.forms import CSVDataSetForm, DataSetForm, EditCSVDataSetForm, EditDataSetForm
+from app.modules.dataset.forms import DataSetForm, EditDataSetForm
 from app.modules.dataset.models import DSDownloadRecord
 from app.modules.dataset.services import (
     AuthorService,
@@ -47,7 +38,6 @@ ds_view_record_service = DSViewRecordService()
 @login_required
 def create_dataset():
     form = DataSetForm()
-    csv_form = CSVDataSetForm()
 
     if request.method == "POST":
 
@@ -58,13 +48,12 @@ def create_dataset():
 
         try:
             logger.info("Creating dataset...")
-            # pass csv_form so CSV-specific fields (has_header, delimiter) are available
-            dataset = dataset_service.create_from_form(form=form, current_user=current_user, csv_form=csv_form)
+            dataset = dataset_service.create_from_form(form=form, current_user=current_user)
             logger.info(f"Created dataset: {dataset}")
-            dataset_service.move_feature_models(dataset)
+            dataset_service.move_files(dataset)  # Cambiado de move_feature_models
         except Exception as exc:
             logger.exception(f"Exception while create dataset data in local {exc}")
-            return jsonify({"Exception while create dataset data in local: ": str(exc)}), 400
+            return jsonify({"message": str(exc)}), 400
 
         # send dataset as deposition to Zenodo
         data = {}
@@ -84,9 +73,9 @@ def create_dataset():
             dataset_service.update_dsmetadata(dataset.ds_meta_data_id, deposition_id=deposition_id)
 
             try:
-                # iterate for each feature model (one feature model = one request to Zenodo)
-                for feature_model in dataset.feature_models:
-                    zenodo_service.upload_file(dataset, deposition_id, feature_model)
+                # iterate for each file and upload to Zenodo
+                for file in dataset.files:
+                    zenodo_service.upload_file(dataset, deposition_id, file)
 
                 # publish deposition
                 zenodo_service.publish_deposition(deposition_id)
@@ -95,7 +84,7 @@ def create_dataset():
                 deposition_doi = zenodo_service.get_doi(deposition_id)
                 dataset_service.update_dsmetadata(dataset.ds_meta_data_id, dataset_doi=deposition_doi)
             except Exception as e:
-                msg = f"it has not been possible upload feature models in Zenodo and update the DOI: {e}"
+                msg = f"it has not been possible upload files in Zenodo and update the DOI: {e}"
                 return jsonify({"message": msg}), 200
 
         # Delete temp folder
@@ -106,7 +95,7 @@ def create_dataset():
         msg = "Everything works!"
         return jsonify({"message": msg}), 200
 
-    return render_template("dataset/upload_dataset.html", form=form, csv_form=csv_form)
+    return render_template("dataset/upload_dataset.html", form=form)
 
 
 @dataset_bp.route("/dataset/list", methods=["GET", "POST"])
@@ -125,7 +114,7 @@ def upload():
     file = request.files["file"]
     temp_folder = current_user.temp_folder()
 
-    if not file or (not file.filename.endswith(".uvl") and not file.filename.endswith(".csv")):
+    if not file or not file.filename.endswith(".csv"):
         return jsonify({"message": "No valid file"}), 400
 
     # create temp folder
@@ -153,7 +142,7 @@ def upload():
     return (
         jsonify(
             {
-                "message": "UVL uploaded and validated successfully",
+                "message": "CSV uploaded and validated successfully",
                 "filename": new_filename,
             }
         ),
@@ -280,25 +269,13 @@ def get_unsynchronized_dataset(dataset_id):
 def edit_dataset(dataset_id):
     dataset = dataset_service.get_or_404(dataset_id)
 
-    # Check if the user is the owner
+    # Check ownership
     if dataset.user_id != current_user.id:
-        abort(403)
+        return jsonify({"message": "You are not the owner of this dataset"}), 403
 
-    # Check if the dataset is not synchronized (only unsynchronized datasets can be edited)
-    if dataset.ds_meta_data.dataset_doi:
-        abort(403)
-
-    # Determine dataset type
-    dataset_type = dataset.get_dataset_type()
-    is_csv = dataset_type == "csv_data_set"
-
-    # Initialize forms
-    if is_csv:
-        form = EditCSVDataSetForm()
-    else:
-        form = EditDataSetForm()
-
-    csv_form = EditCSVDataSetForm() if is_csv else None
+    form = EditDataSetForm()
+    # Check if dataset is CSV type (all datasets are now CSV)
+    is_csv = hasattr(dataset, "has_header") and hasattr(dataset, "delimiter")
 
     if request.method == "POST":
         if not form.validate_on_submit():
@@ -306,15 +283,12 @@ def edit_dataset(dataset_id):
 
         try:
             logger.info("Creating new version of dataset...")
-            # Create new version with updated data
-            # Note: create_new_version() now handles moving files from temp folder internally
-            new_dataset = dataset_service.create_new_version(
-                dataset=dataset, form=form, current_user=current_user, csv_form=csv_form
-            )
+            # create_new_version now handles CSV fields from form directly
+            new_dataset = dataset_service.create_new_version(dataset=dataset, form=form, current_user=current_user)
             logger.info(f"Created new version: {new_dataset}")
         except Exception as exc:
             logger.exception(f"Exception while creating new version: {exc}")
-            return jsonify({"Exception while creating new version: ": str(exc)}), 400
+            return jsonify({"message": str(exc)}), 400
 
         # send dataset as deposition to Zenodo
         data = {}
@@ -329,23 +303,18 @@ def edit_dataset(dataset_id):
 
         if data.get("conceptrecid"):
             deposition_id = data.get("id")
-
-            # update dataset with deposition id in Zenodo
             dataset_service.update_dsmetadata(new_dataset.ds_meta_data_id, deposition_id=deposition_id)
 
             try:
-                # iterate for each feature model (one feature model = one request to Zenodo)
-                for feature_model in new_dataset.feature_models:
-                    zenodo_service.upload_file(new_dataset, deposition_id, feature_model)
+                # iterate for each file and upload to Zenodo
+                for file in new_dataset.files:
+                    zenodo_service.upload_file(new_dataset, deposition_id, file)
 
-                # publish deposition
                 zenodo_service.publish_deposition(deposition_id)
-
-                # update DOI
                 deposition_doi = zenodo_service.get_doi(deposition_id)
                 dataset_service.update_dsmetadata(new_dataset.ds_meta_data_id, dataset_doi=deposition_doi)
             except Exception as e:
-                msg = f"it has not been possible upload feature models in Zenodo and update the DOI: {e}"
+                msg = f"it has not been possible upload files in Zenodo and update the DOI: {e}"
                 return jsonify({"message": msg}), 200
 
         # Delete temp folder
@@ -363,10 +332,9 @@ def edit_dataset(dataset_id):
     form.publication_doi.data = dataset.ds_meta_data.publication_doi
     form.dataset_doi.data = dataset.ds_meta_data.dataset_doi
     form.tags.data = dataset.ds_meta_data.tags
-    form.dataset_type.data = "csv" if is_csv else "uvl"
 
-    if is_csv and csv_form:
-        csv_form.has_header.data = dataset.has_header
-        csv_form.delimiter.data = dataset.delimiter
+    if is_csv:
+        form.has_header.data = dataset.has_header
+        form.delimiter.data = dataset.delimiter
 
-    return render_template("dataset/edit_dataset.html", form=form, csv_form=csv_form, dataset=dataset, is_csv=is_csv)
+    return render_template("dataset/edit_dataset.html", form=form, dataset=dataset, is_csv=is_csv)

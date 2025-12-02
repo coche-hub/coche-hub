@@ -1,12 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
-from app.modules.auth.models import (
-    Email2FACode,
-    EmailValidationCode,
-    TwoFAAttempt,
-    User,
-)
+from app.modules.auth.models import Email2FACode, EmailValidationCode, TwoFAAttempt, User
 from core.repositories.BaseRepository import BaseRepository
 
 
