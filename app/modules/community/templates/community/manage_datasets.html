@@ -1,0 +1,170 @@
+{% extends "base_template.html" %}
+{% block title %}Manage Datasets - {{ community.name }}{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="{{ url_for('community.index') }}">Communities</a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{{ url_for('community.detail', community_id=community.id) }}">{{ community.name }}</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">Manage Datasets</li>
+        </ol>
+    </nav>
+
+    <h1 class="mb-4">Manage Datasets for {{ community.name }}</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ 'success' if category == 'success' else ('warning' if category == 'warning' else 'danger') }}"
+        role="alert">
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <div class="row">
+        <!-- Currently Assigned Datasets -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-check-circle"></i> Assigned Datasets ({{ assigned_datasets|length
+                        }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if assigned_datasets %}
+                    <div class="list-group">
+                        {% for dataset in assigned_datasets %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">
+                                        {% if dataset.ds_meta_data.dataset_doi %}
+                                        <a href="{{ dataset.get_dataset_url() }}" target="_blank">
+                                            {{ dataset.ds_meta_data.title }}
+                                        </a>
+                                        {% else %}
+                                        <a href="{{ url_for('dataset.get_unsynchronized_dataset', dataset_id=dataset.id) }}"
+                                            target="_blank">
+                                            {{ dataset.ds_meta_data.title }}
+                                        </a>
+                                        {% endif %}
+                                    </h6>
+                                    <p class="mb-1 small text-muted">
+                                        {{ dataset.ds_meta_data.description[:100] }}{% if
+                                        dataset.ds_meta_data.description|length > 100 %}...{% endif %}
+                                    </p>
+                                    <small class="text-muted">
+                                        <i class="fas fa-file"></i> {{ dataset.get_files_count() }} files |
+                                        <i class="fas fa-hdd"></i> {{ dataset.get_file_total_size_for_human() }}
+                                    </small>
+                                </div>
+                                <form method="POST"
+                                    action="{{ url_for('community.unassign_dataset', community_id=community.id, dataset_id=dataset.id) }}"
+                                    class="ms-2"
+                                    onsubmit="return confirm('Are you sure you want to remove this dataset from the community?');">
+                                    <button type="submit" class="btn btn-sm btn-danger" title="Unassign">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No datasets assigned yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Available Datasets to Assign -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-plus-circle"></i> Available Datasets ({{ available_datasets|length
+                        }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if available_datasets %}
+                    <div class="mb-3">
+                        <input type="text" id="searchDatasets" class="form-control" placeholder="Search datasets..."
+                            onkeyup="filterDatasets()">
+                    </div>
+                    <div class="list-group" id="availableDatasetsList" style="max-height: 600px; overflow-y: auto;">
+                        {% for dataset in available_datasets %}
+                        <div class="list-group-item dataset-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1 dataset-title">
+                                        {% if dataset.ds_meta_data.dataset_doi %}
+                                        <a href="{{ dataset.get_dataset_url() }}" target="_blank">
+                                            {{ dataset.ds_meta_data.title }}
+                                        </a>
+                                        {% else %}
+                                        <a href="{{ url_for('dataset.get_unsynchronized_dataset', dataset_id=dataset.id) }}"
+                                            target="_blank">
+                                            {{ dataset.ds_meta_data.title }}
+                                        </a>
+                                        {% endif %}
+                                    </h6>
+                                    <p class="mb-1 small text-muted dataset-description">
+                                        {{ dataset.ds_meta_data.description[:100] }}{% if
+                                        dataset.ds_meta_data.description|length > 100 %}...{% endif %}
+                                    </p>
+                                    <small class="text-muted">
+                                        <i class="fas fa-file"></i> {{ dataset.get_files_count() }} files |
+                                        <i class="fas fa-hdd"></i> {{ dataset.get_file_total_size_for_human() }}
+                                    </small>
+                                </div>
+                                <form method="POST"
+                                    action="{{ url_for('community.assign_dataset', community_id=community.id) }}"
+                                    class="ms-2">
+                                    <input type="hidden" name="dataset_id" value="{{ dataset.id }}">
+                                    <button type="submit" class="btn btn-sm btn-success" title="Assign to community">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">All available datasets have been assigned to this community.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <a href="{{ url_for('community.detail', community_id=community.id) }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Community
+        </a>
+    </div>
+</div>
+
+<script>
+    function filterDatasets() {
+        const searchInput = document.getElementById('searchDatasets');
+        const filter = searchInput.value.toLowerCase();
+        const datasetItems = document.querySelectorAll('.dataset-item');
+
+        datasetItems.forEach(item => {
+            const title = item.querySelector('.dataset-title').textContent.toLowerCase();
+            const description = item.querySelector('.dataset-description').textContent.toLowerCase();
+
+            if (title.includes(filter) || description.includes(filter)) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+</script>
+{% endblock %}
