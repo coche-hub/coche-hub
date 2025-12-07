@@ -323,21 +323,16 @@ def view_datasets(community_id):
     """View all datasets assigned to a community"""
     service = CommunityService()
     community = service.get_by_id(community_id)
-    
+
     if not community:
         abort(404)
-    
+
     dataset_assignments = service.get_community_datasets(community_id)
     datasets = [assignment.dataset for assignment in dataset_assignments]
-    
+
     is_curator = current_user.is_authenticated and service.is_curator(current_user.id, community_id)
-    
-    return render_template(
-        "community/datasets.html",
-        community=community,
-        datasets=datasets,
-        is_curator=is_curator
-    )
+
+    return render_template("community/datasets.html", community=community, datasets=datasets, is_curator=is_curator)
 
 
 @community_bp.route("/community/<int:community_id>/datasets/manage", methods=["GET"])
@@ -346,25 +341,25 @@ def manage_datasets(community_id):
     """Page for curators to manage dataset assignments"""
     service = CommunityService()
     community = service.get_by_id(community_id)
-    
+
     if not community:
         abort(404)
-    
+
     if not service.is_curator(current_user.id, community_id):
         abort(403)
-    
+
     # Get currently assigned datasets
     dataset_assignments = service.get_community_datasets(community_id)
     assigned_datasets = [assignment.dataset for assignment in dataset_assignments]
-    
+
     # Get available datasets to assign
     available_datasets = service.get_available_datasets_for_community(community_id)
-    
+
     return render_template(
         "community/manage_datasets.html",
         community=community,
         assigned_datasets=assigned_datasets,
-        available_datasets=available_datasets
+        available_datasets=available_datasets,
     )
 
 
@@ -373,15 +368,15 @@ def manage_datasets(community_id):
 def assign_dataset(community_id):
     """Assign a dataset to the community"""
     service = CommunityService()
-    
+
     if not service.is_curator(current_user.id, community_id):
         abort(403)
-    
+
     dataset_id = request.form.get("dataset_id")
     if not dataset_id:
         flash("Dataset ID is required", "danger")
         return redirect(url_for("community.manage_datasets", community_id=community_id))
-    
+
     try:
         dataset_id = int(dataset_id)
         service.assign_dataset_to_community(community_id, dataset_id, current_user.id)
@@ -392,7 +387,7 @@ def assign_dataset(community_id):
         flash(str(e), "warning")
     except Exception as e:
         flash(f"Error assigning dataset: {str(e)}", "danger")
-    
+
     return redirect(url_for("community.manage_datasets", community_id=community_id))
 
 
@@ -401,10 +396,10 @@ def assign_dataset(community_id):
 def unassign_dataset(community_id, dataset_id):
     """Remove a dataset from the community"""
     service = CommunityService()
-    
+
     if not service.is_curator(current_user.id, community_id):
         abort(403)
-    
+
     try:
         service.unassign_dataset_from_community(community_id, dataset_id, current_user.id)
         flash("Dataset unassigned successfully", "success")
@@ -412,5 +407,5 @@ def unassign_dataset(community_id, dataset_id):
         flash(str(e), "danger")
     except Exception as e:
         flash(f"Error unassigning dataset: {str(e)}", "danger")
-    
+
     return redirect(url_for("community.manage_datasets", community_id=community_id))
