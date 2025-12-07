@@ -16,6 +16,7 @@ class Community(db.Model):
 
     # Relationships
     curators = db.relationship("CommunityCurator", back_populates="community", cascade="all, delete-orphan")
+    community_datasets = db.relationship("CommunityDataset", back_populates="community", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Community {self.name}>"
@@ -43,3 +44,24 @@ class CommunityCurator(db.Model):
 
     def __repr__(self):
         return f"<CommunityCurator community_id={self.community_id} user_id={self.user_id}>"
+
+
+class CommunityDataset(db.Model):
+    __tablename__ = "community_dataset"
+
+    # Columns
+    id = db.Column(db.Integer, primary_key=True)
+    community_id = db.Column(db.Integer, db.ForeignKey("community.id"), nullable=False)
+    dataset_id = db.Column(db.Integer, db.ForeignKey("data_set.id"), nullable=False)
+    assigned_by = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    assigned_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
+
+    # Relationships
+    community = db.relationship("Community", back_populates="community_datasets")
+    dataset = db.relationship("DataSet", backref="community_assignments")
+    curator = db.relationship("User")
+
+    __table_args__ = (db.UniqueConstraint("community_id", "dataset_id", name="unique_community_dataset"),)
+
+    def __repr__(self):
+        return f"<CommunityDataset community_id={self.community_id} dataset_id={self.dataset_id}>"
