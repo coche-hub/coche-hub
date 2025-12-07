@@ -54,11 +54,7 @@ class CommunityDatasetRepository(BaseRepository):
     def assign_dataset(self, community_id: int, dataset_id: int, assigned_by: int) -> CommunityDataset:
         """Assign a dataset to a community"""
         try:
-            assignment = CommunityDataset(
-                community_id=community_id,
-                dataset_id=dataset_id,
-                assigned_by=assigned_by
-            )
+            assignment = CommunityDataset(community_id=community_id, dataset_id=dataset_id, assigned_by=assigned_by)
             db.session.add(assignment)
             db.session.flush()
             return assignment
@@ -68,10 +64,7 @@ class CommunityDatasetRepository(BaseRepository):
 
     def unassign_dataset(self, community_id: int, dataset_id: int) -> bool:
         """Remove a dataset from a community"""
-        assignment = self.model.query.filter_by(
-            community_id=community_id,
-            dataset_id=dataset_id
-        ).first()
+        assignment = self.model.query.filter_by(community_id=community_id, dataset_id=dataset_id).first()
         if assignment:
             db.session.delete(assignment)
             db.session.flush()
@@ -88,8 +81,5 @@ class CommunityDatasetRepository(BaseRepository):
 
     def is_dataset_assigned(self, community_id: int, dataset_id: int) -> bool:
         """Check if a dataset is already assigned to a community"""
-        assignment = self.model.query.filter_by(
-            community_id=community_id,
-            dataset_id=dataset_id
-        ).first()
+        assignment = self.model.query.filter_by(community_id=community_id, dataset_id=dataset_id).first()
         return assignment is not None

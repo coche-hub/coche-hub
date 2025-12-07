@@ -2,7 +2,11 @@ from typing import Optional
 
 from app import db
 from app.modules.community.models import Community, CommunityCurator
-from app.modules.community.repositories import CommunityCuratorRepository, CommunityRepository, CommunityDatasetRepository
+from app.modules.community.repositories import (
+    CommunityCuratorRepository,
+    CommunityDatasetRepository,
+    CommunityRepository,
+)
 from core.services.BaseService import BaseService
 
 
@@ -98,11 +102,11 @@ class CommunityService(BaseService):
         """
         if not self.is_curator(curator_id, community_id):
             raise PermissionError("Only curators can assign datasets to this community")
-        
+
         # Check if already assigned
         if self.dataset_repository.is_dataset_assigned(community_id, dataset_id):
             raise ValueError("Dataset is already assigned to this community")
-        
+
         try:
             assignment = self.dataset_repository.assign_dataset(community_id, dataset_id, curator_id)
             db.session.commit()
@@ -118,7 +122,7 @@ class CommunityService(BaseService):
         """
         if not self.is_curator(curator_id, community_id):
             raise PermissionError("Only curators can unassign datasets from this community")
-        
+
         try:
             result = self.dataset_repository.unassign_dataset(community_id, dataset_id)
             db.session.commit()
@@ -134,17 +138,16 @@ class CommunityService(BaseService):
     def get_available_datasets_for_community(self, community_id: int):
         """Get datasets that are not yet assigned to this community"""
         from app.modules.dataset.models import DataSet
-        
+
         # Get all dataset IDs already assigned to this community
         assigned_dataset_ids = [
-            assignment.dataset_id 
-            for assignment in self.dataset_repository.get_community_datasets(community_id)
+            assignment.dataset_id for assignment in self.dataset_repository.get_community_datasets(community_id)
         ]
-        
+
         # Query all datasets not in the assigned list
         if assigned_dataset_ids:
             available_datasets = DataSet.query.filter(~DataSet.id.in_(assigned_dataset_ids)).all()
         else:
             available_datasets = DataSet.query.all()
-        
+
         return available_datasets
