@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/coche-hub/coche-hub/compare/v1.0.0...v1.0.1) (2025-12-08)
+
+
+### Bug Fixes
+
+* 💚 Only create release if tests pass ([cba7754](https://github.com/coche-hub/coche-hub/commit/cba77540eaeaa7ff2a70bcb60f53858e6fca4990))
+
 ## 1.0.0 (2025-12-08)
 
 
