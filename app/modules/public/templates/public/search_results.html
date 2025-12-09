@@ -13,6 +13,28 @@
     {% endif %}
 </div>
 
+{% if selected_community %}
+<div class="card mb-4" style="border-left: 4px solid #0662A6;">
+    <div class="card-body">
+        <div class="d-flex align-items-center">
+            {% if selected_community.logo %}
+            <img src="{{ selected_community.logo }}" alt="{{ selected_community.name }}"
+                style="width: 50px; height: 50px; object-fit: contain; margin-right: 15px;">
+            {% else %}
+            <div
+                style="width: 50px; height: 50px; background-color: #0662A6; border-radius: 5px; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+                <i data-feather="users" style="color: white; width: 30px; height: 30px;"></i>
+            </div>
+            {% endif %}
+            <div>
+                <h5 class="mb-0">Filtering by Community</h5>
+                <p class="mb-0 text-muted">{{ selected_community.name }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <div class="card mb-4">
     <div class="card-body">
         <h5 class="card-title">Refine Search</h5>

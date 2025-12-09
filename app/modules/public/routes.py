@@ -78,11 +78,13 @@ def search_datasets():
         logger.info(f"Filtering by publication_type: {pub_type}")
 
     # Community filter
+    selected_community = None
     community_id = request.args.get("community", "").strip()
     if community_id:
         try:
             community_id_int = int(community_id)
             query = query.join(CommunityDataset).filter(CommunityDataset.community_id == community_id_int)
+            selected_community = community_service.get_by_id(community_id_int)
             logger.info(f"Filtering by community_id: {community_id_int}")
         except ValueError:
             logger.warning(f"Invalid community_id format: {community_id}")
@@ -121,4 +123,5 @@ def search_datasets():
         datasets=datasets,
         search_params=request.args.to_dict(),
         communities=communities,
+        selected_community=selected_community,
     )
