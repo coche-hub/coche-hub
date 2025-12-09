@@ -571,3 +571,55 @@ class SizeService:
             return f"{round(size / (1024 ** 2), 2)} MB"
         else:
             return f"{round(size / (1024 ** 3), 2)} GB"
+
+
+class DataSetRecommendationService:
+    """Service for dataset recommendations based on similarity"""
+
+    MAX_RECOMMENDATIONS = 3
+
+    def __init__(self):
+        self.dataset_repository = DataSetRepository()
+
+    def get_difference_level(self, dataset1: DataSet, dataset2: DataSet) -> float:
+        """
+        Calculate the difference level between two datasets based on the number of cars (coches).
+        Lower values mean more similar datasets.
+
+        Args:
+            dataset1: The first dataset to compare
+            dataset2: The second dataset to compare
+
+        Returns:
+            float: The difference level based on the absolute difference in number of coches
+        """
+        coches1 = len(dataset1.coches) if hasattr(dataset1, "coches") else 0
+        coches2 = len(dataset2.coches) if hasattr(dataset2, "coches") else 0
+
+        difference = abs(coches1 - coches2)
+
+        return float(difference)
+
+    def get_recommended_datasets(self, dataset: DataSet) -> list[DataSet]:
+        """
+        Get the most similar datasets to the given dataset.
+
+        Args:
+            dataset: The dataset to find recommendations for
+
+        Returns:
+            list[DataSet]: Up to 3 most similar datasets, sorted by similarity
+        """
+
+        all_datasets = self.dataset_repository.get_all()
+
+        current_dataset_id = dataset.id
+        other_datasets = [ds for ds in all_datasets if ds.id != current_dataset_id]
+
+        datasets_with_difference = [(ds, self.get_difference_level(dataset, ds)) for ds in other_datasets]
+
+        datasets_with_difference.sort(key=lambda x: x[1])
+
+        recommended = [ds for ds, _ in datasets_with_difference[: self.MAX_RECOMMENDATIONS]]
+
+        return recommended

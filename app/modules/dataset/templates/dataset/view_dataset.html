@@ -278,22 +278,6 @@
                             <button onclick="viewFile('{{ file.id }}')" class="btn btn-outline-secondary btn-sm" style="border-radius: 5px;">
                                 <i data-feather="eye"></i> View
                             </button>
-
-                                <div class="btn-group" role="group">
-                                    <button id="btnGroupDrop{{ file.id }}" type="button" class="btn btn-outline-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" style=" border-radius: 5px;">
-                                        <i data-feather="check"></i> Check
-                                    </button>
-                                    <ul class="dropdown-menu" aria-labelledby="btnGroupDrop{{ file.id }}">
-                                        <li>
-                                            <a class="dropdown-item" href="javascript:void(0);" onclick="checkCSV('{{ file.id }}')">Format check</a>
-                                        </li>
-                                        <!--
-                                        <li>
-                                            <a class="dropdown-item" href="{{ url_for('flamapy.valid', file_id=file.id) }}">SAT validity check</a>
-                                        </li>
-                                        -->
-                                    </ul>
-                                </div>
                                 
                                 <a href="{{ url_for('hubfile.download_file', file_id=file.id) }}" class="btn btn-primary btn-sm" style="border-radius: 5px;">
                                     <i data-feather="download"></i> Download
@@ -316,6 +300,48 @@
     </div>
     
 </div>
+
+<!-- Related Datasets Section -->
+{% if recommended_datasets and recommended_datasets|length > 0 %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h3><i data-feather="layers" class="me-2"></i>Related Datasets</h3>
+                <p class="text-muted">Discover similar datasets that might interest you</p>
+                
+                <div class="row">
+                    {% for rec_dataset in recommended_datasets %}
+                    <div class="col-xl-4 col-lg-6 col-md-6 col-sm-12 mb-3">
+                        <div class="card h-100 border">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <a href="/doi/{{ rec_dataset.ds_meta_data.dataset_doi }}/" class="text-decoration-none">
+                                        {{ rec_dataset.ds_meta_data.title | truncate(50) }}
+                                    </a>
+                                </h5>
+                                <p class="card-text text-muted small">
+                                    {{ rec_dataset.ds_meta_data.description | truncate(100) }}
+                                </p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-secondary">{{ rec_dataset.get_cleaned_publication_type() }}</span>
+                                    <small class="text-muted">{{ rec_dataset.get_files_count() }} files</small>
+                                </div>
+                            </div>
+                            <div class="card-footer bg-transparent">
+                                <a href="/doi/{{ rec_dataset.ds_meta_data.dataset_doi }}/" class="btn btn-outline-primary btn-sm w-100">
+                                    <i data-feather="eye" class="me-1"></i> View Dataset
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <!-- Modal-->
 <div class="modal fade" id="fileViewerModal" tabindex="-1" aria-labelledby="fileViewerModalLabel" aria-hidden="true">
@@ -382,84 +408,6 @@
     function hideLoading() {
         document.getElementById("loading").style.display = "none";
     }
-
-    function checkCSV(file_id) {
-    const outputDiv = document.getElementById('check_' + file_id);
-    outputDiv.innerHTML = '<span class="badge badge-info">Checking...</span>'; // Show loading state
-
-    fetch(`/flamapy/check_csv/${file_id}`)
-        .then(response => {
-            return response.json().then(data => ({
-                status: response.status,
-                data
-            }));
-        })
-        .then(({ status, data }) => {
-            if (status === 400) {
-                // Display errors
-                outputDiv.innerHTML = '';
-                if (data.errors) {
-                    const errorTitle = document.createElement('span');
-                    errorTitle.className = 'badge badge-danger';
-                    errorTitle.textContent = 'Format Errors:';
-                    outputDiv.appendChild(errorTitle);
-                    outputDiv.appendChild(document.createElement('br'));
-                    
-                    data.errors.forEach(error => {
-                        const errorElement = document.createElement('span');
-                        errorElement.className = 'badge badge-danger';
-                        errorElement.style.marginTop = '2px';
-                        errorElement.textContent = error;
-                        outputDiv.appendChild(errorElement);
-                        outputDiv.appendChild(document.createElement('br'));
-                    });
-                }
-                
-                // Display warnings if any
-                if (data.warnings) {
-                    data.warnings.forEach(warning => {
-                        const warningElement = document.createElement('span');
-                        warningElement.className = 'badge badge-warning';
-                        warningElement.style.marginTop = '2px';
-                        warningElement.textContent = warning;
-                        outputDiv.appendChild(warningElement);
-                        outputDiv.appendChild(document.createElement('br'));
-                    });
-                }
-                
-                if (!data.errors && !data.warnings) {
-                    outputDiv.innerHTML = `<span class="badge badge-danger">Error: ${data.error}</span>`;
-                }
-            } else if (status === 200) {
-                // Display success message with file info
-                outputDiv.innerHTML = '';
-                const successBadge = document.createElement('span');
-                successBadge.className = 'badge badge-success';
-                successBadge.textContent = `✓ Valid CSV (${data.rows} rows, ${data.columns} cols)`;
-                outputDiv.appendChild(successBadge);
-                
-                // Show warnings if any
-                if (data.warnings) {
-                    outputDiv.appendChild(document.createElement('br'));
-                    data.warnings.forEach(warning => {
-                        const warningElement = document.createElement('span');
-                        warningElement.className = 'badge badge-warning';
-                        warningElement.style.marginTop = '2px';
-                        warningElement.textContent = warning;
-                        outputDiv.appendChild(warningElement);
-                        outputDiv.appendChild(document.createElement('br'));
-                    });
-                }
-            } else {
-                // Handle unexpected status
-                outputDiv.innerHTML = `<span class="badge badge-warning">Unexpected response status: ${status}</span>`;
-            }
-        })
-        .catch(error => {
-            // Handle fetch errors
-            outputDiv.innerHTML = `<span class="badge badge-danger">An unexpected error occurred: ${error.message}</span>`;
-        });
-}
 
 
     /*
