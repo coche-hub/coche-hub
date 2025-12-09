@@ -1,3 +1,10 @@
+## [2.1.0](https://github.com/coche-hub/coche-hub/compare/v2.0.0...v2.1.0) (2025-12-09)
+
+
+### Features
+
+* remove old CD ([c4481cf](https://github.com/coche-hub/coche-hub/commit/c4481cf5c1c09c36d6a50a04c4c8ace77924f276))
+
 ## [2.0.0](https://github.com/coche-hub/coche-hub/compare/v1.0.1...v2.0.0) (2025-12-09)
 
 
