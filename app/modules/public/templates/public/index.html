@@ -9,6 +9,57 @@
         <b>Latest</b> datasets
     </h1>
 
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Advanced Search</h5>
+            <form method="GET" action="/search" class="row g-3">
+                <div class="col-md-6">
+                    <label for="title" class="form-label">Title</label>
+                    <input type="text" class="form-control" id="title" name="title" placeholder="Search by title">
+                </div>
+                <div class="col-md-6">
+                    <label for="author" class="form-label">Author</label>
+                    <input type="text" class="form-control" id="author" name="author" placeholder="Search by author name">
+                </div>
+                <div class="col-md-6">
+                    <label for="tags" class="form-label">Tags</label>
+                    <input type="text" class="form-control" id="tags" name="tags" placeholder="Search by tags (comma-separated)">
+                </div>
+                <div class="col-md-6">
+                    <label for="publication_type" class="form-label">Publication Type</label>
+                    <select class="form-select" id="publication_type" name="publication_type">
+                        <option value="">All Types</option>
+                        <option value="book">Book</option>
+                        <option value="article">Article</option>
+                        <option value="report">Report</option>
+                        <option value="thesis">Thesis</option>
+                        <option value="conferencepaper">Conference Paper</option>
+                        <option value="preprint">Preprint</option>
+                        <option value="deliverable">Deliverable</option>
+                        <option value="workingpaper">Working Paper</option>
+                        <option value="softwaredocumentation">Software Documentation</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="date_from" class="form-label">From Date</label>
+                    <input type="date" class="form-control" id="date_from" name="date_from">
+                </div>
+                <div class="col-md-6">
+                    <label for="date_to" class="form-label">To Date</label>
+                    <input type="date" class="form-control" id="date_to" name="date_to">
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i data-feather="search" class="center-button-icon"></i>
+                        Search
+                    </button>
+                    <a href="/" class="btn btn-secondary">Clear</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="row">
 
         <div class="mb-2 col-xl-8 col-lg-12 col-md-12 col-sm-12">
