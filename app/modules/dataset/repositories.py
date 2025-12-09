@@ -99,6 +99,10 @@ class DataSetRepository(BaseRepository):
             .all()
         )
 
+    def get_all_synchronized(self):
+        """Get all synchronized datasets"""
+        return self.model.query.join(DSMetaData).filter(DSMetaData.dataset_doi.isnot(None)).all()
+
 
 class DOIMappingRepository(BaseRepository):
     def __init__(self):
