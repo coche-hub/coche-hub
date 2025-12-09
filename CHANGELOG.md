@@ -1,3 +1,23 @@
+## [2.0.0](https://github.com/coche-hub/coche-hub/compare/v1.0.1...v2.0.0) (2025-12-09)
+
+
+### ⚠ BREAKING CHANGES
+
+* Delete check button for csv
+* advanced dataset search
+
+### Features
+
+* Add dataset recommendation ([0006db0](https://github.com/coche-hub/coche-hub/commit/0006db00315e00a1a1f9e3876d72f9fb05e62ad1))
+* advanced dataset search ([4b68a3f](https://github.com/coche-hub/coche-hub/commit/4b68a3f381b1d48a6a125fa242d8188ad2431e4e))
+* Delete check button for csv ([cf82247](https://github.com/coche-hub/coche-hub/commit/cf8224728d16e5d7c3a854e8a16242fdcc06e4fa))
+* Recomendation logic added ([562154c](https://github.com/coche-hub/coche-hub/commit/562154c41d9cf37a6c485e89c6a67b3ee17167bf))
+
+
+### Bug Fixes
+
+* 💚 Only create release if tests pass ([a5b0d77](https://github.com/coche-hub/coche-hub/commit/a5b0d776329a2112fe0cf1fa0ff2c684ed116f51))
+
 ## [1.0.1](https://github.com/coche-hub/coche-hub/compare/v1.0.0...v1.0.1) (2025-12-08)
 
 
