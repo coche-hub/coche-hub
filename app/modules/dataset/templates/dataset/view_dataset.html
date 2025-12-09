@@ -317,6 +317,48 @@
     
 </div>
 
+<!-- Related Datasets Section -->
+{% if recommended_datasets and recommended_datasets|length > 0 %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h3><i data-feather="layers" class="me-2"></i>Related Datasets</h3>
+                <p class="text-muted">Discover similar datasets that might interest you</p>
+                
+                <div class="row">
+                    {% for rec_dataset in recommended_datasets %}
+                    <div class="col-xl-4 col-lg-6 col-md-6 col-sm-12 mb-3">
+                        <div class="card h-100 border">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <a href="/doi/{{ rec_dataset.ds_meta_data.dataset_doi }}/" class="text-decoration-none">
+                                        {{ rec_dataset.ds_meta_data.title | truncate(50) }}
+                                    </a>
+                                </h5>
+                                <p class="card-text text-muted small">
+                                    {{ rec_dataset.ds_meta_data.description | truncate(100) }}
+                                </p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-secondary">{{ rec_dataset.get_cleaned_publication_type() }}</span>
+                                    <small class="text-muted">{{ rec_dataset.get_files_count() }} files</small>
+                                </div>
+                            </div>
+                            <div class="card-footer bg-transparent">
+                                <a href="/doi/{{ rec_dataset.ds_meta_data.dataset_doi }}/" class="btn btn-outline-primary btn-sm w-100">
+                                    <i data-feather="eye" class="me-1"></i> View Dataset
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <!-- Modal-->
 <div class="modal fade" id="fileViewerModal" tabindex="-1" aria-labelledby="fileViewerModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg" style="height: 80vh; display: flex; align-items: center;">

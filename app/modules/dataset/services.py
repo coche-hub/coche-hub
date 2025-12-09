@@ -571,3 +571,56 @@ class SizeService:
             return f"{round(size / (1024 ** 2), 2)} MB"
         else:
             return f"{round(size / (1024 ** 3), 2)} GB"
+
+
+class DataSetRecommendationService:
+    """Service for dataset recommendations based on similarity"""
+
+    MAX_RECOMMENDATIONS = 3
+
+    def __init__(self):
+        self.dataset_repository = DataSetRepository()
+
+    def get_difference_level(self, dataset1: DataSet, dataset2: DataSet) -> float:
+        """
+        Calculate the difference level between two datasets.
+        Lower values mean more similar datasets.
+
+        Args:
+            dataset1: The first dataset to compare
+            dataset2: The second dataset to compare
+
+        Returns:
+            float: The difference level (0 means identical/most similar)
+        """
+        # TODO: Implement actual similarity logic
+        # For now, return 0 for all comparisons
+        return 0.0
+
+    def get_recommended_datasets(self, dataset: DataSet) -> list[DataSet]:
+        """
+        Get the most similar datasets to the given dataset.
+
+        Args:
+            dataset: The dataset to find recommendations for
+
+        Returns:
+            list[DataSet]: Up to 3 most similar datasets, sorted by similarity
+        """
+        # Get all synchronized datasets
+        all_datasets = self.dataset_repository.get_all_synchronized()
+
+        # Filter out the current dataset (ensure no duplicates)
+        current_dataset_id = dataset.id
+        other_datasets = [ds for ds in all_datasets if ds.id != current_dataset_id]
+
+        # Calculate difference levels for each dataset
+        datasets_with_difference = [(ds, self.get_difference_level(dataset, ds)) for ds in other_datasets]
+
+        # Sort by difference level (ascending - lower difference = more similar)
+        datasets_with_difference.sort(key=lambda x: x[1])
+
+        # Return the top N most similar datasets
+        recommended = [ds for ds, _ in datasets_with_difference[: self.MAX_RECOMMENDATIONS]]
+
+        return recommended

@@ -15,6 +15,7 @@ from app.modules.dataset.forms import DataSetForm, EditDataSetForm
 from app.modules.dataset.models import DSDownloadRecord
 from app.modules.dataset.services import (
     AuthorService,
+    DataSetRecommendationService,
     DataSetService,
     DOIMappingService,
     DSDownloadRecordService,
@@ -32,6 +33,7 @@ dsmetadata_service = DSMetaDataService()
 zenodo_service = ZenodoService()
 doi_mapping_service = DOIMappingService()
 ds_view_record_service = DSViewRecordService()
+dataset_recommendation_service = DataSetRecommendationService()
 
 
 @dataset_bp.route("/dataset/upload", methods=["GET", "POST"])
@@ -243,9 +245,14 @@ def subdomain_index(doi):
     # Get dataset
     dataset = ds_meta_data.data_set
 
+    # Get recommended datasets
+    recommended_datasets = dataset_recommendation_service.get_recommended_datasets(dataset)
+
     # Save the cookie to the user's browser
     user_cookie = ds_view_record_service.create_cookie(dataset=dataset)
-    resp = make_response(render_template("dataset/view_dataset.html", dataset=dataset))
+    resp = make_response(
+        render_template("dataset/view_dataset.html", dataset=dataset, recommended_datasets=recommended_datasets)
+    )
     resp.set_cookie("view_cookie", user_cookie)
 
     return resp
@@ -261,7 +268,10 @@ def get_unsynchronized_dataset(dataset_id):
     if not dataset:
         abort(404)
 
-    return render_template("dataset/view_dataset.html", dataset=dataset)
+    # Get recommended datasets
+    recommended_datasets = dataset_recommendation_service.get_recommended_datasets(dataset)
+
+    return render_template("dataset/view_dataset.html", dataset=dataset, recommended_datasets=recommended_datasets)
 
 
 @dataset_bp.route("/dataset/edit/<int:dataset_id>", methods=["GET", "POST"])
