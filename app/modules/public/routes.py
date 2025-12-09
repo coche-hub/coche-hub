@@ -3,6 +3,8 @@ from datetime import datetime
 
 from flask import render_template, request
 
+from app.modules.community.models import CommunityDataset
+from app.modules.community.services import CommunityService
 from app.modules.dataset.models import Author, DataSet, DSMetaData
 from app.modules.dataset.services import DataSetService
 from app.modules.featuremodel.services import FeatureModelService
@@ -16,6 +18,7 @@ def index():
     logger.info("Access index")
     dataset_service = DataSetService()
     feature_model_service = FeatureModelService()
+    community_service = CommunityService()
 
     # Statistics: total datasets and feature models
     datasets_counter = dataset_service.count_synchronized_datasets()
@@ -29,6 +32,9 @@ def index():
     total_dataset_views = dataset_service.total_dataset_views()
     total_feature_model_views = feature_model_service.total_feature_model_views()
 
+    # Get all communities for the filter dropdown
+    communities = community_service.get_all_communities()
+
     return render_template(
         "public/index.html",
         datasets=dataset_service.latest_synchronized(),
@@ -38,12 +44,14 @@ def index():
         total_feature_model_downloads=total_feature_model_downloads,
         total_dataset_views=total_dataset_views,
         total_feature_model_views=total_feature_model_views,
+        communities=communities,
     )
 
 
 @public_bp.route("/search", methods=["GET"])
 def search_datasets():
     logger.info("Searching datasets with filters")
+    community_service = CommunityService()
 
     query = DataSet.query.join(DSMetaData).filter(DSMetaData.dataset_doi.isnot(None))
 
@@ -68,6 +76,18 @@ def search_datasets():
     if pub_type:
         query = query.filter(DSMetaData.publication_type.like(f"%{pub_type}%"))
         logger.info(f"Filtering by publication_type: {pub_type}")
+
+    # Community filter
+    selected_community = None
+    community_id = request.args.get("community", "").strip()
+    if community_id:
+        try:
+            community_id_int = int(community_id)
+            query = query.join(CommunityDataset).filter(CommunityDataset.community_id == community_id_int)
+            selected_community = community_service.get_by_id(community_id_int)
+            logger.info(f"Filtering by community_id: {community_id_int}")
+        except ValueError:
+            logger.warning(f"Invalid community_id format: {community_id}")
 
     date_from = request.args.get("date_from")
     if date_from:
@@ -95,4 +115,13 @@ def search_datasets():
 
     logger.info(f"Found {len(datasets)} datasets matching search criteria")
 
-    return render_template("public/search_results.html", datasets=datasets, search_params=request.args.to_dict())
+    # Get all communities for the filter dropdown
+    communities = community_service.get_all_communities()
+
+    return render_template(
+        "public/search_results.html",
+        datasets=datasets,
+        search_params=request.args.to_dict(),
+        communities=communities,
+        selected_community=selected_community,
+    )
