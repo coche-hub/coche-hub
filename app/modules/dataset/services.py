@@ -122,6 +122,7 @@ class DataSetService(BaseService):
 
         # Read first CSV to get number of columns
         num_columns = 0
+        average_engine_size = None
         if csv_files:
             first_csv_path = os.path.join(temp_folder, csv_files[0])
             try:
@@ -136,8 +137,19 @@ class DataSetService(BaseService):
                 logger.warning(f"Could not read CSV for metrics: {e}")
                 num_columns = 0
 
+            # Calculate average engine size from first CSV
+            try:
+                average_engine_size = self._calculate_average_engine_size(first_csv_path, has_header, delimiter)
+            except Exception as e:
+                logger.warning(f"Could not calculate average engine size: {e}")
+                average_engine_size = None
+
         # Create metrics
-        ds_metrics = DSMetrics(number_of_models=str(num_files), number_of_features=str(num_columns))
+        ds_metrics = DSMetrics(
+            number_of_models=str(num_files),
+            number_of_features=str(num_columns),
+            average_engine_size=average_engine_size,
+        )
 
         # Get authors
         authors = []
@@ -322,6 +334,17 @@ class DataSetService(BaseService):
                             )
                             total_coches_created += coches_created
 
+            # Calculate and update metrics with average engine size
+            # Get all CSV files from the new dataset directory
+            csv_files_in_dataset = [f for f in os.listdir(new_dataset_dir) if f.endswith(".csv")]
+            if csv_files_in_dataset:
+                # Calculate average from first CSV file
+                first_csv = os.path.join(new_dataset_dir, csv_files_in_dataset[0])
+                average_engine_size = self._calculate_average_engine_size(
+                    first_csv, new_dataset.has_header, new_dataset.delimiter
+                )
+                dsmetadata.ds_metrics.average_engine_size = average_engine_size
+
             self.repository.session.commit()
             msg = f"Successfully created new version: {new_dataset.id} with version {new_dataset.version} and {total_coches_created} new coches"  # noqa: E501
             logger.info(msg)
@@ -332,6 +355,65 @@ class DataSetService(BaseService):
             raise exc
 
         return new_dataset
+
+    def _extract_engine_size(self, motor_str: str) -> float:
+        """
+        Extract engine size from motor string.
+        Examples: "1.6 tdi" -> 1.6, "2.0 gasolina" -> 2.0, "1.6" -> 1.6
+        """
+        import re
+
+        if not motor_str or not isinstance(motor_str, str):
+            return None
+
+        # Try to match a decimal number at the start of the string
+        match = re.match(r"^(\d+[.,]\d+|\d+)", motor_str.strip())
+        if match:
+            try:
+                # Replace comma with dot for consistency
+                size_str = match.group(1).replace(",", ".")
+                return float(size_str)
+            except ValueError:
+                return None
+
+        return None
+
+    def _calculate_average_engine_size(self, file_path: str, has_header: bool, delimiter: str) -> Optional[float]:
+        """
+        Calculate the average engine size from all coches in the CSV file.
+        Returns the average or None if no valid engine sizes found.
+        """
+        import csv
+
+        engine_sizes = []
+
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                reader = csv.DictReader(f, delimiter=delimiter) if has_header else csv.reader(f, delimiter=delimiter)
+
+                for row in reader:
+                    try:
+                        if has_header:
+                            motor_str = row.get("Motor", "").strip()
+                        else:
+                            motor_str = row[2].strip() if len(row) > 2 else ""
+
+                        size = self._extract_engine_size(motor_str)
+                        if size is not None:
+                            engine_sizes.append(size)
+                    except (IndexError, ValueError, AttributeError):
+                        continue
+
+        except Exception as e:
+            logger.warning(f"Error calculating average engine size from {file_path}: {e}")
+            return None
+
+        if engine_sizes:
+            average = sum(engine_sizes) / len(engine_sizes)
+            logger.info(f"Calculated average engine size: {average} from {len(engine_sizes)} coches")
+            return average
+
+        return None
 
     def _parse_csv_and_create_coches(self, file_path: str, has_header: bool, delimiter: str, dataset_id: int) -> int:
         """
