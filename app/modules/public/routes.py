@@ -5,7 +5,7 @@ from flask import render_template, request
 
 from app.modules.community.models import CommunityDataset
 from app.modules.community.services import CommunityService
-from app.modules.dataset.models import Author, DataSet, DSMetaData, PublicationType
+from app.modules.dataset.models import Author, DataSet, DSMetaData, DSMetrics, PublicationType
 from app.modules.dataset.services import DataSetService
 from app.modules.featuremodel.services import FeatureModelService
 from app.modules.public import public_bp
@@ -119,6 +119,33 @@ def search_datasets():
             logger.info(f"Filtering to date: {date_to}")
         except ValueError as e:
             logger.warning(f"Invalid date format for date_to: {date_to}. Error: {e}")
+
+    # Filter by engine size (average motor size)
+    engine_size_min = request.args.get("engine_size_min", "").strip()
+    engine_size_max = request.args.get("engine_size_max", "").strip()
+
+    if engine_size_min and engine_size_max:
+        try:
+            min_val = float(engine_size_min)
+            max_val = float(engine_size_max)
+            query = query.filter(DSMetaData.ds_metrics.has(DSMetrics.average_engine_size.between(min_val, max_val)))
+            logger.info(f"Filtering by engine size between {min_val} and {max_val}")
+        except ValueError:
+            logger.warning(f"Invalid engine size values: min={engine_size_min}, max={engine_size_max}")
+    elif engine_size_min:
+        try:
+            min_val = float(engine_size_min)
+            query = query.filter(DSMetaData.ds_metrics.has(DSMetrics.average_engine_size >= min_val))
+            logger.info(f"Filtering by minimum engine size: {min_val}")
+        except ValueError:
+            logger.warning(f"Invalid engine size value for min: {engine_size_min}")
+    elif engine_size_max:
+        try:
+            max_val = float(engine_size_max)
+            query = query.filter(DSMetaData.ds_metrics.has(DSMetrics.average_engine_size <= max_val))
+            logger.info(f"Filtering by maximum engine size: {max_val}")
+        except ValueError:
+            logger.warning(f"Invalid engine size value for max: {engine_size_max}")
 
     datasets = query.order_by(DataSet.created_at.desc()).distinct().all()
 

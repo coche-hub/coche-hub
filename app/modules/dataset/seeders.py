@@ -1,4 +1,5 @@
 import os
+import re
 import shutil
 
 from app.modules.auth.models import User
@@ -71,6 +72,7 @@ class DataSetSeeder(BaseSeeder):
         import csv
 
         num_columns = 0
+        average_engine_size = None
 
         try:
             with open(csv_path, "r", encoding="utf-8") as f:
@@ -82,8 +84,13 @@ class DataSetSeeder(BaseSeeder):
             print(f"Warning: Could not read CSV file {csv_filename}: {e}")
             num_columns = 1
 
+        # Calculate average engine size
+        average_engine_size = self._calculate_average_engine_size(csv_path, has_header, delimiter)
+
         # Create dataset metadata with calculated metrics
-        ds_metrics = DSMetrics(number_of_models=str(1), number_of_features=str(num_columns))
+        ds_metrics = DSMetrics(
+            number_of_models=str(1), number_of_features=str(num_columns), average_engine_size=average_engine_size
+        )
 
         ds_meta_data = DSMetaData(
             title=title,
@@ -133,3 +140,61 @@ class DataSetSeeder(BaseSeeder):
         self.db.session.commit()
 
         return dataset
+
+    def _extract_engine_size(self, motor_str: str) -> float:
+        """
+        Extract engine size from motor string.
+        Examples: "1.6 tdi" -> 1.6, "2.0 gasolina" -> 2.0, "1.6" -> 1.6
+        """
+        if not motor_str or not isinstance(motor_str, str):
+            return None
+
+        # Try to match a decimal number at the start of the string
+        match = re.match(r"^(\d+[.,]\d+|\d+)", motor_str.strip())
+        if match:
+            try:
+                # Replace comma with dot for consistency
+                size_str = match.group(1).replace(",", ".")
+                return float(size_str)
+            except ValueError:
+                return None
+
+        return None
+
+    def _calculate_average_engine_size(self, file_path: str, has_header: bool, delimiter: str) -> float:
+        """
+        Calculate the average engine size from all coches in the CSV file.
+        Returns the average or None if no valid engine sizes found.
+        """
+        import csv
+
+        engine_sizes = []
+
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                reader = csv.DictReader(f, delimiter=delimiter) if has_header else csv.reader(f, delimiter=delimiter)
+
+                for row in reader:
+                    try:
+                        if has_header:
+                            motor_str = row.get("Motor", "").strip()
+                        else:
+                            # Assuming motor is the 3rd column (index 2)
+                            motor_str = row[2].strip() if len(row) > 2 else ""
+
+                        size = self._extract_engine_size(motor_str)
+                        if size is not None:
+                            engine_sizes.append(size)
+                    except (IndexError, ValueError, AttributeError):
+                        continue
+
+        except Exception as e:
+            print(f"Warning: Error calculating average engine size from {file_path}: {e}")
+            return None
+
+        if engine_sizes:
+            average = sum(engine_sizes) / len(engine_sizes)
+            print(f"Calculated average engine size: {average} from {len(engine_sizes)} coches")
+            return average
+
+        return None
