@@ -4,14 +4,36 @@
 
 {% block content %}
 
-    <h1 class="h2 mb-3">Search Results</h1>
-    
-    <div class="alert alert-info">
-        Found <strong>{{ datasets|length }}</strong> dataset(s)
-        {% if search_params %}
-            matching your search criteria
-        {% endif %}
+<h1 class="h2 mb-3">Search Results</h1>
+
+<div class="alert alert-info">
+    Found <strong>{{ datasets|length }}</strong> dataset(s)
+    {% if search_params %}
+    matching your search criteria
+    {% endif %}
+</div>
+
+{% if selected_community %}
+<div class="card mb-4" style="border-left: 4px solid #0662A6;">
+    <div class="card-body">
+        <div class="d-flex align-items-center">
+            {% if selected_community.logo %}
+            <img src="{{ selected_community.logo }}" alt="{{ selected_community.name }}"
+                style="width: 50px; height: 50px; object-fit: contain; margin-right: 15px;">
+            {% else %}
+            <div
+                style="width: 50px; height: 50px; background-color: #0662A6; border-radius: 5px; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+                <i data-feather="users" style="color: white; width: 30px; height: 30px;"></i>
+            </div>
+            {% endif %}
+            <div>
+                <h5 class="mb-0">Filtering by Community</h5>
+                <p class="mb-0 text-muted">{{ selected_community.name }}</p>
+            </div>
+        </div>
     </div>
+</div>
+{% endif %}
 
     <div class="card mb-4">
         <div class="card-body">
@@ -29,6 +51,15 @@
                     <label for="tags" class="form-label">Tags</label>
                     <input type="text" class="form-control" id="tags" name="tags" placeholder="Search by tags (comma-separated)" value="{{ search_params.get('tags', '') }}">
                 </div>
+                            <div class="col-md-6">
+                <label for="community" class="form-label">Community</label>
+                <select class="form-select" id="community" name="community">
+                    <option value="">All Communities</option>
+                    {% for community in communities %}
+                    <option value="{{ community.id }}" {% if search_params.get('community')==community.id|string
+                        %}selected{% endif %}>{{ community.name }}</option>
+                    {% endfor %}
+                </select>
                 <div class="col-md-6">
                     <label for="publication_type" class="form-label">Publication Type</label>
                     <select class="form-select" id="publication_type" name="publication_type">
@@ -73,119 +104,120 @@
         </div>
     </div>
 
-    <div class="row">
-        <div class="mb-2 col-xl-8 col-lg-12 col-md-12 col-sm-12">
+<div class="row">
+    <div class="mb-2 col-xl-8 col-lg-12 col-md-12 col-sm-12">
 
-            {% if datasets %}
-                {% for dataset in datasets %}
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <h2>
-                                    <a href="{{ dataset.get_dataset_url() }}">
-                                        {{ dataset.ds_meta_data.title }}
-                                    </a>
-                                </h2>
-                                <div>
-                                    <span class="badge bg-secondary">{{ dataset.get_cleaned_publication_type() }}</span>
-                                </div>
-                            </div>
-                            <p class="text-secondary">{{ dataset.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
-
-                            <div class="row mb-2">
-                                <div class="col-12">
-                                    <p class="card-text">{{ dataset.ds_meta_data.description }}</p>
-                                </div>
-                            </div>
-
-                            <div class="row mb-2 mt-4">
-                                <div class="col-12">
-                                    {% for author in dataset.ds_meta_data.authors %}
-                                        <p class="p-0 m-0">
-                                            {{ author.name }}
-                                            {% if author.affiliation %}
-                                                ({{ author.affiliation }})
-                                            {% endif %}
-                                            {% if author.orcid %}
-                                                ({{ author.orcid }})
-                                            {% endif %}
-                                        </p>
-                                    {% endfor %}
-                                </div>
-                            </div>
-
-                            <div class="row mb-2">
-                                <div class="col-12">
-                                    <a href="{{ dataset.get_dataset_url() }}">{{ dataset.get_dataset_url() }}</a>
-                                    <div id="dataset_doi_uvlhub_{{ dataset.id }}" style="display: none">
-                                        {{ dataset.get_dataset_url() }}
-                                    </div>
-                                    <i data-feather="clipboard" class="center-button-icon"
-                                       style="cursor: pointer"
-                                       onclick="copyText('dataset_doi_uvlhub_{{ dataset.id }}')"></i>
-                                </div>
-                            </div>
-
-                            <div class="row mb-2">
-                                <div class="col-12">
-                                    {% for tag in dataset.ds_meta_data.tags.split(',') %}
-                                        <span class="badge bg-secondary">{{ tag.strip() }}</span>
-                                    {% endfor %}
-                                </div>
-                            </div>
-
-                            <div class="row  mt-4">
-                                <div class="col-12">
-                                    <a href="{{ dataset.get_dataset_url() }}" class="btn btn-outline-primary btn-sm"
-                                       style="border-radius: 5px;">
-                                        <i data-feather="eye" class="center-button-icon"></i>
-                                        View dataset
-                                    </a>
-
-                                    <a href="/dataset/download/{{ dataset.id }}" class="btn btn-outline-primary btn-sm"
-                                       style="border-radius: 5px;">
-                                        <i data-feather="download" class="center-button-icon"></i>
-                                        Download ({{ dataset.get_file_total_size_for_human() }})
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
+        {% if datasets %}
+        {% for dataset in datasets %}
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <h2>
+                        <a href="{{ dataset.get_dataset_url() }}">
+                            {{ dataset.ds_meta_data.title }}
+                        </a>
+                    </h2>
+                    <div>
+                        <span class="badge bg-secondary">{{ dataset.get_cleaned_publication_type() }}</span>
                     </div>
-                {% endfor %}
-            {% else %}
-                <div class="alert alert-warning">
-                    <strong>No datasets found</strong> matching your search criteria. Try refining your search or <a href="/">go back to the main page</a>.
                 </div>
-            {% endif %}
+                <p class="text-secondary">{{ dataset.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
 
-            <a href="/" class="btn btn-secondary mt-3">
-                <i data-feather="arrow-left" class="center-button-icon"></i>
-                Back to Home
-            </a>
-        </div>
+                <div class="row mb-2">
+                    <div class="col-12">
+                        <p class="card-text">{{ dataset.ds_meta_data.description }}</p>
+                    </div>
+                </div>
 
-        <div class="col-xl-4 col-lg-12 col-md-12 col-sm-12">
-            <div class="row">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-body">
-                            <h2><b>Search Tips</b></h2>
-                            <ul>
-                                <li><strong>Title:</strong> Filter by keywords</li>
-                                <li><strong>Author:</strong> Filter by author name</li>
-                                <li><strong>Tags:</strong> Search by tags(separated by commas)</li>
-                                <li><strong>Publication Type:</strong> Filter by document type</li>
-                                <li><strong>Date Range:</strong> Filter by creation date</li>
-                            </ul>
+                <div class="row mb-2 mt-4">
+                    <div class="col-12">
+                        {% for author in dataset.ds_meta_data.authors %}
+                        <p class="p-0 m-0">
+                            {{ author.name }}
+                            {% if author.affiliation %}
+                            ({{ author.affiliation }})
+                            {% endif %}
+                            {% if author.orcid %}
+                            ({{ author.orcid }})
+                            {% endif %}
+                        </p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="row mb-2">
+                    <div class="col-12">
+                        <a href="{{ dataset.get_dataset_url() }}">{{ dataset.get_dataset_url() }}</a>
+                        <div id="dataset_doi_uvlhub_{{ dataset.id }}" style="display: none">
+                            {{ dataset.get_dataset_url() }}
                         </div>
+                        <i data-feather="clipboard" class="center-button-icon" style="cursor: pointer"
+                            onclick="copyText('dataset_doi_uvlhub_{{ dataset.id }}')"></i>
+                    </div>
+                </div>
+
+                <div class="row mb-2">
+                    <div class="col-12">
+                        {% for tag in dataset.ds_meta_data.tags.split(',') %}
+                        <span class="badge bg-secondary">{{ tag.strip() }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="row  mt-4">
+                    <div class="col-12">
+                        <a href="{{ dataset.get_dataset_url() }}" class="btn btn-outline-primary btn-sm"
+                            style="border-radius: 5px;">
+                            <i data-feather="eye" class="center-button-icon"></i>
+                            View dataset
+                        </a>
+
+                        <a href="/dataset/download/{{ dataset.id }}" class="btn btn-outline-primary btn-sm"
+                            style="border-radius: 5px;">
+                            <i data-feather="download" class="center-button-icon"></i>
+                            Download ({{ dataset.get_file_total_size_for_human() }})
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="alert alert-warning">
+            <strong>No datasets found</strong> matching your search criteria. Try refining your search or <a href="/">go
+                back to the main page</a>.
+        </div>
+        {% endif %}
+
+        <a href="/" class="btn btn-secondary mt-3">
+            <i data-feather="arrow-left" class="center-button-icon"></i>
+            Back to Home
+        </a>
+    </div>
+
+    <div class="col-xl-4 col-lg-12 col-md-12 col-sm-12">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h2><b>Search Tips</b></h2>
+                        <ul>
+                            <li><strong>Title:</strong> Filter by keywords</li>
+                            <li><strong>Author:</strong> Filter by author name</li>
+                            <li><strong>Tags:</strong> Search by tags(separated by commas)</li>
+                            <li><strong>Community:</strong> Filter datasets by community</li>
+                            <li><strong>Publication Type:</strong> Filter by document type</li>
+                            <li><strong>Date Range:</strong> Filter by creation date</li>
+                        </ul>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
 {% endblock %}
 
 {% block scripts %}
-    <script src="{{ url_for('public.scripts') }}"></script>
+<script src="{{ url_for('public.scripts') }}"></script>
 {% endblock %}
