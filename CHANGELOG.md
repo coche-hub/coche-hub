@@ -1,3 +1,27 @@
+## [3.0.0](https://github.com/coche-hub/coche-hub/compare/v2.1.0...v3.0.0) (2025-12-10)
+
+
+### ⚠ BREAKING CHANGES
+
+* change recomendation method
+* seeder now uploads cars to db
+
+### Features
+
+* añadido filtrado por consumo medio de los coches ([9cda12f](https://github.com/coche-hub/coche-hub/commit/9cda12ff5000c056784b4c21c5d16496cc058ce7))
+* change recomendation method ([0376ebf](https://github.com/coche-hub/coche-hub/commit/0376ebf2dfa00254ea805bb94f5dc2259ccd26c2))
+* filter by average motor size ([9eff446](https://github.com/coche-hub/coche-hub/commit/9eff446a81a0a739a337fb4bc9b83fb564238472))
+* New CD implemented ([1b61718](https://github.com/coche-hub/coche-hub/commit/1b617182b55abeb74b5e32d66a203541f0546223))
+
+
+### Bug Fixes
+
+* el filtro no buscaba entre todos los datasets ([57ac506](https://github.com/coche-hub/coche-hub/commit/57ac506f097f170b951df8fb561370c3335e38b1))
+* la busqueda esta ahora tambien en la pagina de exploracion ([547d803](https://github.com/coche-hub/coche-hub/commit/547d8039b30bf450e1ab59a72f68ad8e14a8b4b8))
+* pagina principal y de busqueda no se veian bien ([c611725](https://github.com/coche-hub/coche-hub/commit/c611725ec972ffca3ad9445b17f662d941c76d9b))
+* publication type didnt search correctly ([1cb477b](https://github.com/coche-hub/coche-hub/commit/1cb477b662a90446ddc6dda9a9d9cac1c6bc49aa))
+* seeder now uploads cars to db ([8b4dfbe](https://github.com/coche-hub/coche-hub/commit/8b4dfbe6ffdccb95125244d1cae40eb4ede17797))
+
 ## [2.1.0](https://github.com/coche-hub/coche-hub/compare/v2.0.0...v2.1.0) (2025-12-09)
 
 
