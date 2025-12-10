@@ -1,13 +1,19 @@
 import os
+import shutil
 
 from app.modules.auth.models import User
 from app.modules.dataset.models import Author, CSVDataSet, DSMetaData, DSMetrics, PublicationType
+from app.modules.dataset.services import DataSetService
 from app.modules.hubfile.models import Hubfile
 from core.seeders.BaseSeeder import BaseSeeder
 
 
 class DataSetSeeder(BaseSeeder):
     priority = 2  # Lower priority
+
+    def __init__(self):
+        super().__init__()
+        self.dataset_service = DataSetService()  # Instanciar el servicio
 
     def run(self):
         # Retrieve seeded users
@@ -77,9 +83,7 @@ class DataSetSeeder(BaseSeeder):
             num_columns = 1
 
         # Create dataset metadata with calculated metrics
-        ds_metrics = DSMetrics(
-            number_of_models=str(1), number_of_features=str(num_columns)  # For CSV, we consider 1 file = 1 model
-        )
+        ds_metrics = DSMetrics(number_of_models=str(1), number_of_features=str(num_columns))
 
         ds_meta_data = DSMetaData(
             title=title,
@@ -87,7 +91,7 @@ class DataSetSeeder(BaseSeeder):
             publication_type=publication_type,
             tags=tags,
             ds_metrics=ds_metrics,
-            dataset_doi=f"10.1234/example.{csv_filename.replace('.csv', '')}",  # DOI de ejemplo
+            dataset_doi=f"10.1234/example.{csv_filename.replace('.csv', '')}",
         )
 
         # Add sample authors
@@ -100,7 +104,7 @@ class DataSetSeeder(BaseSeeder):
         dataset = CSVDataSet(user=user, ds_meta_data=ds_meta_data, has_header=has_header, delimiter=delimiter)
 
         self.db.session.add(dataset)
-        self.db.session.flush()  # Obtener el ID del dataset antes de crear hubfile
+        self.db.session.flush()
 
         # Get file size
         file_size = os.path.getsize(csv_path)
@@ -117,13 +121,15 @@ class DataSetSeeder(BaseSeeder):
         os.makedirs(user_upload_dir, exist_ok=True)
 
         destination_path = os.path.join(user_upload_dir, csv_filename)
-
-        # Copy the file
-        import shutil
-
         shutil.copy2(csv_path, destination_path)
 
-        self.db.session.add(dataset)
+        # Use the service method to parse CSV and create Coches
+        coches_created = self.dataset_service._parse_csv_and_create_coches(
+            destination_path, has_header, delimiter, dataset.id
+        )
+
+        print(f"Created {coches_created} coches from {csv_filename}")
+
         self.db.session.commit()
 
         return dataset
