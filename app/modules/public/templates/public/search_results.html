@@ -33,15 +33,24 @@
                     <label for="publication_type" class="form-label">Publication Type</label>
                     <select class="form-select" id="publication_type" name="publication_type">
                         <option value="">All Types</option>
+                        <option value="none" {% if search_params.get('publication_type') == 'none' %}selected{% endif %}>None</option>
+                        <option value="annotationcollection" {% if search_params.get('publication_type') == 'annotationcollection' %}selected{% endif %}>Annotation Collection</option>
                         <option value="book" {% if search_params.get('publication_type') == 'book' %}selected{% endif %}>Book</option>
-                        <option value="article" {% if search_params.get('publication_type') == 'article' %}selected{% endif %}>Article</option>
-                        <option value="report" {% if search_params.get('publication_type') == 'report' %}selected{% endif %}>Report</option>
-                        <option value="thesis" {% if search_params.get('publication_type') == 'thesis' %}selected{% endif %}>Thesis</option>
+                        <option value="section" {% if search_params.get('publication_type') == 'section' %}selected{% endif %}>Section</option>
                         <option value="conferencepaper" {% if search_params.get('publication_type') == 'conferencepaper' %}selected{% endif %}>Conference Paper</option>
+                        <option value="datamanagementplan" {% if search_params.get('publication_type') == 'datamanagementplan' %}selected{% endif %}>Data Management Plan</option>
+                        <option value="article" {% if search_params.get('publication_type') == 'article' %}selected{% endif %}>Article</option>
+                        <option value="patent" {% if search_params.get('publication_type') == 'patent' %}selected{% endif %}>Patent</option>
                         <option value="preprint" {% if search_params.get('publication_type') == 'preprint' %}selected{% endif %}>Preprint</option>
-                        <option value="deliverable" {% if search_params.get('publication_type') == 'deliverable' %}selected{% endif %}>Deliverable</option>
-                        <option value="workingpaper" {% if search_params.get('publication_type') == 'workingpaper' %}selected{% endif %}>Working Paper</option>
+                        <option value="deliverable" {% if search_params.get('publication_type') == 'deliverable' %}selected{% endif %}>Project Deliverable</option>
+                        <option value="milestone" {% if search_params.get('publication_type') == 'milestone' %}selected{% endif %}>Project Milestone</option>
+                        <option value="proposal" {% if search_params.get('publication_type') == 'proposal' %}selected{% endif %}>Proposal</option>
+                        <option value="report" {% if search_params.get('publication_type') == 'report' %}selected{% endif %}>Report</option>
                         <option value="softwaredocumentation" {% if search_params.get('publication_type') == 'softwaredocumentation' %}selected{% endif %}>Software Documentation</option>
+                        <option value="taxonomictreatment" {% if search_params.get('publication_type') == 'taxonomictreatment' %}selected{% endif %}>Taxonomic Treatment</option>
+                        <option value="technicalnote" {% if search_params.get('publication_type') == 'technicalnote' %}selected{% endif %}>Technical Note</option>
+                        <option value="thesis" {% if search_params.get('publication_type') == 'thesis' %}selected{% endif %}>Thesis</option>
+                        <option value="workingpaper" {% if search_params.get('publication_type') == 'workingpaper' %}selected{% endif %}>Working Paper</option>
                         <option value="other" {% if search_params.get('publication_type') == 'other' %}selected{% endif %}>Other</option>
                     </select>
                 </div>
