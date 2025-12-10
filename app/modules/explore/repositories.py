@@ -1,10 +1,7 @@
-import re
+from datetime import datetime, timedelta
 
-import unidecode
-from sqlalchemy import any_, or_
-
-from app.modules.dataset.models import Author, DataSet, DSMetaData, PublicationType
-from app.modules.featuremodel.models import FeatureModel, FMMetaData
+from app.modules.community.models import CommunityDataset
+from app.modules.dataset.models import Author, DataSet, DSMetaData, DSMetrics, PublicationType
 from core.repositories.BaseRepository import BaseRepository
 
 
@@ -12,51 +9,101 @@ class ExploreRepository(BaseRepository):
     def __init__(self):
         super().__init__(DataSet)
 
-    def filter(self, query="", sorting="newest", publication_type="any", tags=[], **kwargs):
-        # Normalize and remove unwanted characters
-        normalized_query = unidecode.unidecode(query).lower()
-        cleaned_query = re.sub(r'[,.":\'()\[\]^;!¡¿?]', "", normalized_query)
+    def filter(
+        self,
+        title="",
+        author="",
+        tags="",
+        community="",
+        publication_type="",
+        date_from="",
+        date_to="",
+        engine_size_min="",
+        engine_size_max="",
+        sorting="newest",
+        **kwargs,
+    ):
+        # Start with base query that ensures dataset_doi is not null
+        query = DataSet.query.join(DSMetaData).filter(DSMetaData.dataset_doi.isnot(None))
 
-        filters = []
-        for word in cleaned_query.split():
-            filters.append(DSMetaData.title.ilike(f"%{word}%"))
-            filters.append(DSMetaData.description.ilike(f"%{word}%"))
-            filters.append(Author.name.ilike(f"%{word}%"))
-            filters.append(Author.affiliation.ilike(f"%{word}%"))
-            filters.append(Author.orcid.ilike(f"%{word}%"))
-            filters.append(FMMetaData.uvl_filename.ilike(f"%{word}%"))
-            filters.append(FMMetaData.title.ilike(f"%{word}%"))
-            filters.append(FMMetaData.description.ilike(f"%{word}%"))
-            filters.append(FMMetaData.publication_doi.ilike(f"%{word}%"))
-            filters.append(FMMetaData.tags.ilike(f"%{word}%"))
-            filters.append(DSMetaData.tags.ilike(f"%{word}%"))
+        # Filter by title
+        if title:
+            query = query.filter(DSMetaData.title.ilike(f"%{title}%"))
 
-        datasets = (
-            self.model.query.join(DataSet.ds_meta_data)
-            .join(DSMetaData.authors)
-            .join(DataSet.feature_models)
-            .join(FeatureModel.fm_meta_data)
-            .filter(or_(*filters))
-            .filter(DSMetaData.dataset_doi.isnot(None))  # Exclude datasets with empty dataset_doi
-        )
+        # Filter by author
+        if author:
+            query = query.outerjoin(Author).filter(Author.name.ilike(f"%{author}%"))
 
-        if publication_type != "any":
-            matching_type = None
-            for member in PublicationType:
-                if member.value.lower() == publication_type:
-                    matching_type = member
-                    break
-
-            if matching_type is not None:
-                datasets = datasets.filter(DSMetaData.publication_type == matching_type.name)
-
+        # Filter by tags (comma-separated)
         if tags:
-            datasets = datasets.filter(DSMetaData.tags.ilike(any_(f"%{tag}%" for tag in tags)))
+            tag_list = [tag.strip() for tag in tags.split(",")]
+            for tag in tag_list:
+                query = query.filter(DSMetaData.tags.ilike(f"%{tag}%"))
+
+        # Filter by community
+        if community:
+            try:
+                community_id_int = int(community)
+                query = query.join(CommunityDataset).filter(CommunityDataset.community_id == community_id_int)
+            except ValueError:
+                pass
+
+        # Filter by publication type
+        if publication_type and publication_type != "":
+            try:
+                pub_type_enum = None
+                for enum_member in PublicationType:
+                    if enum_member.value.lower() == publication_type.lower():
+                        pub_type_enum = enum_member
+                        break
+
+                if pub_type_enum:
+                    query = query.filter(DSMetaData.publication_type == pub_type_enum)
+            except Exception:
+                pass
+
+        # Filter by date_from
+        if date_from:
+            try:
+                date_from_obj = datetime.strptime(date_from, "%Y-%m-%d")
+                query = query.filter(DataSet.created_at >= date_from_obj)
+            except ValueError:
+                pass
+
+        # Filter by date_to
+        if date_to:
+            try:
+                date_to_obj = datetime.strptime(date_to, "%Y-%m-%d")
+                date_to_obj = date_to_obj + timedelta(days=1)
+                query = query.filter(DataSet.created_at < date_to_obj)
+            except ValueError:
+                pass
+
+        # Filter by engine size (average motor size)
+        if engine_size_min and engine_size_max:
+            try:
+                min_val = float(engine_size_min)
+                max_val = float(engine_size_max)
+                query = query.filter(DSMetaData.ds_metrics.has(DSMetrics.average_engine_size.between(min_val, max_val)))
+            except ValueError:
+                pass
+        elif engine_size_min:
+            try:
+                min_val = float(engine_size_min)
+                query = query.filter(DSMetaData.ds_metrics.has(DSMetrics.average_engine_size >= min_val))
+            except ValueError:
+                pass
+        elif engine_size_max:
+            try:
+                max_val = float(engine_size_max)
+                query = query.filter(DSMetaData.ds_metrics.has(DSMetrics.average_engine_size <= max_val))
+            except ValueError:
+                pass
 
         # Order by created_at
         if sorting == "oldest":
-            datasets = datasets.order_by(self.model.created_at.asc())
+            query = query.order_by(DataSet.created_at.asc())
         else:
-            datasets = datasets.order_by(self.model.created_at.desc())
+            query = query.order_by(DataSet.created_at.desc())
 
-        return datasets.all()
+        return query.distinct().all()
