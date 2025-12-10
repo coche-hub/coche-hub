@@ -18,8 +18,17 @@ function send_query() {
 
             const searchCriteria = {
                 csrf_token: csrfToken,
-                query: document.querySelector('#query').value,
+                title: document.querySelector('#title').value,
+                author: document.querySelector('#author').value,
+                tags: document.querySelector('#tags').value,
+                community: document.querySelector('#community').value,
                 publication_type: document.querySelector('#publication_type').value,
+                date_from: document.querySelector('#date_from').value,
+                date_to: document.querySelector('#date_to').value,
+                engine_size_min: document.querySelector('#engine_size_min').value,
+                engine_size_max: document.querySelector('#engine_size_max').value,
+                consumption_min: document.querySelector('#consumption_min').value,
+                consumption_max: document.querySelector('#consumption_max').value,
                 sorting: document.querySelector('[name="sorting"]:checked').value,
             };
 
@@ -162,44 +171,124 @@ document.getElementById('clear-filters').addEventListener('click', clearFilters)
 
 function clearFilters() {
 
-    // Reset the search query
-    let queryInput = document.querySelector('#query');
-    queryInput.value = "";
-    // queryInput.dispatchEvent(new Event('input', {bubbles: true}));
+    // Reset all search fields
+    let titleInput = document.querySelector('#title');
+    titleInput.value = "";
+
+    let authorInput = document.querySelector('#author');
+    authorInput.value = "";
+
+    let tagsInput = document.querySelector('#tags');
+    tagsInput.value = "";
+
+    let communityInput = document.querySelector('#community');
+    communityInput.value = "";
 
     // Reset the publication type to its default value
     let publicationTypeSelect = document.querySelector('#publication_type');
-    publicationTypeSelect.value = "any"; // replace "any" with whatever your default value is
-    // publicationTypeSelect.dispatchEvent(new Event('input', {bubbles: true}));
+    publicationTypeSelect.value = "";
+
+    // Reset date fields
+    let dateFromInput = document.querySelector('#date_from');
+    dateFromInput.value = "";
+
+    let dateToInput = document.querySelector('#date_to');
+    dateToInput.value = "";
+
+    // Reset engine size fields
+    let engineSizeMinInput = document.querySelector('#engine_size_min');
+    engineSizeMinInput.value = "";
+
+    let engineSizeMaxInput = document.querySelector('#engine_size_max');
+    engineSizeMaxInput.value = "";
+
+   // Reset consumption fields
+    let consumptionMinInput = document.querySelector('#consumption_min');
+    consumptionMinInput.value = "";
+
+    let consumptionMaxInput = document.querySelector('#consumption_max');
+    consumptionMaxInput.value = ""; 
 
     // Reset the sorting option
     let sortingOptions = document.querySelectorAll('[name="sorting"]');
     sortingOptions.forEach(option => {
-        option.checked = option.value == "newest"; // replace "default" with whatever your default value is
-        // option.dispatchEvent(new Event('input', {bubbles: true}));
+        option.checked = option.value == "newest";
     });
 
     // Perform a new search with the reset filters
-    queryInput.dispatchEvent(new Event('input', {bubbles: true}));
+    titleInput.dispatchEvent(new Event('input', {bubbles: true}));
 }
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    //let queryInput = document.querySelector('#query');
-    //queryInput.dispatchEvent(new Event('input', {bubbles: true}));
-
     let urlParams = new URLSearchParams(window.location.search);
-    let queryParam = urlParams.get('query');
+    let titleParam = urlParams.get('title');
+    let authorParam = urlParams.get('author');
+    let tagsParam = urlParams.get('tags');
+    let communityParam = urlParams.get('community');
+    let publicationTypeParam = urlParams.get('publication_type');
+    let dateFromParam = urlParams.get('date_from');
+    let dateToParam = urlParams.get('date_to');
+    let engineSizeMinParam = urlParams.get('engine_size_min');
+    let engineSizeMaxParam = urlParams.get('engine_size_max');
+    let consumptionMinParam = urlParams.get('consumption_min');
+    let consumptionMaxParam = urlParams.get('consumption_max');
 
-    if (queryParam && queryParam.trim() !== '') {
-
-        const queryInput = document.getElementById('query');
-        queryInput.value = queryParam
-        queryInput.dispatchEvent(new Event('input', {bubbles: true}));
-        console.log("throw event");
-
-    } else {
-        const queryInput = document.getElementById('query');
-        queryInput.dispatchEvent(new Event('input', {bubbles: true}));
+    if (titleParam && titleParam.trim() !== '') {
+        const titleInput = document.getElementById('title');
+        titleInput.value = titleParam;
     }
+
+    if (authorParam && authorParam.trim() !== '') {
+        const authorInput = document.getElementById('author');
+        authorInput.value = authorParam;
+    }
+
+    if (tagsParam && tagsParam.trim() !== '') {
+        const tagsInput = document.getElementById('tags');
+        tagsInput.value = tagsParam;
+    }
+
+    if (communityParam && communityParam.trim() !== '') {
+        const communitySelect = document.getElementById('community');
+        communitySelect.value = communityParam;
+    }
+
+    if (publicationTypeParam && publicationTypeParam.trim() !== '') {
+        const publicationTypeSelect = document.getElementById('publication_type');
+        publicationTypeSelect.value = publicationTypeParam;
+    }
+
+    if (dateFromParam && dateFromParam.trim() !== '') {
+        const dateFromInput = document.getElementById('date_from');
+        dateFromInput.value = dateFromParam;
+    }
+
+    if (dateToParam && dateToParam.trim() !== '') {
+        const dateToInput = document.getElementById('date_to');
+        dateToInput.value = dateToParam;
+    }
+
+    if (engineSizeMinParam && engineSizeMinParam.trim() !== '') {
+        const engineSizeMinInput = document.getElementById('engine_size_min');
+        engineSizeMinInput.value = engineSizeMinParam;
+    }
+
+    if (engineSizeMaxParam && engineSizeMaxParam.trim() !== '') {
+        const engineSizeMaxInput = document.getElementById('engine_size_max');
+        engineSizeMaxInput.value = engineSizeMaxParam;
+    }
+
+    if (consumptionMinParam && consumptionMinParam.trim() !== '') {
+        const consumptionMinInput = document.getElementById('consumption_min');
+        consumptionMinInput.value = consumptionMinParam;
+    }
+
+    if (consumptionMaxParam && consumptionMaxParam.trim() !== '') {
+        const consumptionMaxInput = document.getElementById('consumption_max');
+        consumptionMaxInput.value = consumptionMaxParam;
+    }
+
+    const titleInput = document.getElementById('title');
+    titleInput.dispatchEvent(new Event('input', {bubbles: true}));
 });

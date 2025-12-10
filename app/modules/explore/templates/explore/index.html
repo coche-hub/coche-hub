@@ -47,11 +47,47 @@
 
                         <div class="col-12">
                             <div class="mb-3">
-                                <label class="form-label" for="query">
-                                    Search for datasets by title, description, authors, tags, UVL files...
+                                <label class="form-label" for="title">
+                                    Title
                                 </label>
-                                <input class="form-control" id="query" name="query" required="" type="text"
-                                       value="" autofocus>
+                                <input class="form-control" id="title" name="title" type="text"
+                                       value="" placeholder="Search by title">
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="row">
+
+                        <div class="col-lg-6">
+                            <div class="mb-3">
+                                <label class="form-label" for="author">Author</label>
+                                <input class="form-control" id="author" name="author" type="text"
+                                       value="" placeholder="Search by author name">
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <div class="mb-3">
+                                <label class="form-label" for="tags">Tags</label>
+                                <input class="form-control" id="tags" name="tags" type="text"
+                                       value="" placeholder="Search by tags (comma-separated)">
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="row">
+
+                        <div class="col-lg-6">
+                            <div class="mb-3">
+                                <label class="form-label" for="community">Community</label>
+                                <select class="form-control" id="community" name="community">
+                                    <option value="">All Communities</option>
+                                    {% for community in communities %}
+                                        <option value="{{ community.id }}">{{ community.name }}</option>
+                                    {% endfor %}
+                                </select>
                             </div>
                         </div>
 
@@ -61,14 +97,14 @@
                                     type</label>
                                 <select class="form-control" id="publication_type" name="publication_type"
                                         required="">
-                                    <option value="any">Any</option>
+                                    <option value="">All Types</option>
                                     <option value="none">None</option>
                                     <option value="annotationcollection">Annotation Collection</option>
                                     <option value="book">Book</option>
-                                    <option value="section">Book Section</option>
+                                    <option value="section">Section</option>
                                     <option value="conferencepaper">Conference Paper</option>
                                     <option value="datamanagementplan">Data Management Plan</option>
-                                    <option value="article">Journal Article</option>
+                                    <option value="article">Article</option>
                                     <option value="patent">Patent</option>
                                     <option value="preprint">Preprint</option>
                                     <option value="deliverable">Project Deliverable</option>
@@ -86,6 +122,53 @@
 
                         </div>
 
+                    </div>
+
+                    <div class="row">
+
+                        <div class="col-lg-6">
+                            <div class="mb-3">
+                                <label class="form-label" for="date_from">From Date</label>
+                                <input class="form-control" id="date_from" name="date_from" type="date">
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <div class="mb-3">
+                                <label class="form-label" for="date_to">To Date</label>
+                                <input class="form-control" id="date_to" name="date_to" type="date">
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="row">
+
+                        <div class="col-lg-6">
+                            <div class="mb-3">
+                                <label class="form-label" for="engine_size_min">Min Engine Size (L)</label>
+                                <input type="number" step="0.001" class="form-control" id="engine_size_min" name="engine_size_min" placeholder="e.g., 1.200">
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <div class="mb-3">
+                                <label class="form-label" for="engine_size_max">Max Engine Size (L)</label>
+                                <input type="number" step="0.001" class="form-control" id="engine_size_max" name="engine_size_max" placeholder="e.g., 2.000">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="consumption_min" class="form-label">Min Consumption (L/100km)</label>
+                                <input type="number" step="0.001" class="form-control" id="consumption_min" name="consumption_min" placeholder="e.g., 5.000">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="consumption_max" class="form-label">Max Consumption (L/100km)</label>
+                                <input type="number" step="0.001" class="form-control" id="consumption_max" name="consumption_max" placeholder="e.g., 8.000">
+                            </div>
+                        </div>
                     </div>
 
                     <div class="row">
