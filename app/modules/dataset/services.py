@@ -663,9 +663,24 @@ class DataSetRecommendationService:
     def __init__(self):
         self.dataset_repository = DataSetRepository()
 
+    def _parse_tags(self, tags_string: str) -> set:
+        """
+        Parse tags from string to set, trimming whitespace.
+
+        Args:
+            tags_string: Comma-separated tags string
+
+        Returns:
+            set: Set of trimmed tags
+        """
+        if not tags_string:
+            return set()
+        return {tag.strip() for tag in tags_string.split(",") if tag.strip()}
+
     def get_difference_level(self, dataset1: DataSet, dataset2: DataSet) -> float:
         """
-        Calculate the difference level between two datasets based on the number of cars (coches).
+        Calculate the difference level between two datasets
+
         Lower values mean more similar datasets.
 
         Args:
@@ -673,14 +688,26 @@ class DataSetRecommendationService:
             dataset2: The second dataset to compare
 
         Returns:
-            float: The difference level based on the absolute difference in number of coches
+            float: The difference level (sum of differences)
         """
-        coches1 = len(dataset1.coches) if hasattr(dataset1, "coches") else 0
-        coches2 = len(dataset2.coches) if hasattr(dataset2, "coches") else 0
+        difference = 0.0
 
-        difference = abs(coches1 - coches2)
+        pub_type_1 = dataset1.ds_meta_data.publication_type
+        pub_type_2 = dataset2.ds_meta_data.publication_type
+        if pub_type_1 != pub_type_2:
+            difference += 1.0
 
-        return float(difference)
+        tags_1 = self._parse_tags(dataset1.ds_meta_data.tags or "")
+        tags_2 = self._parse_tags(dataset2.ds_meta_data.tags or "")
+        tags_xor = tags_1.symmetric_difference(tags_2)
+        difference += len(tags_xor)
+
+        authors_1 = {author.name.lower().strip() for author in dataset1.ds_meta_data.authors}
+        authors_2 = {author.name.lower().strip() for author in dataset2.ds_meta_data.authors}
+        authors_xor = authors_1.symmetric_difference(authors_2)
+        difference += len(authors_xor)
+
+        return difference
 
     def get_recommended_datasets(self, dataset: DataSet) -> list[DataSet]:
         """
