@@ -1,5 +1,6 @@
 from flask import jsonify, render_template, request
 
+from app.modules.community.services import CommunityService
 from app.modules.explore import explore_bp
 from app.modules.explore.forms import ExploreForm
 from app.modules.explore.services import ExploreService
@@ -10,7 +11,9 @@ def index():
     if request.method == "GET":
         query = request.args.get("query", "")
         form = ExploreForm()
-        return render_template("explore/index.html", form=form, query=query)
+        community_service = CommunityService()
+        communities = community_service.get_all_communities()
+        return render_template("explore/index.html", form=form, query=query, communities=communities)
 
     if request.method == "POST":
         criteria = request.get_json()
