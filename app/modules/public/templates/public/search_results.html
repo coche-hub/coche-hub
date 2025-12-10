@@ -51,8 +51,8 @@
                     <label for="tags" class="form-label">Tags</label>
                     <input type="text" class="form-control" id="tags" name="tags" placeholder="Search by tags (comma-separated)" value="{{ search_params.get('tags', '') }}">
                 </div>
-                            <div class="col-md-6">
-                <label for="community" class="form-label">Community</label>
+                <div class="col-md-6">
+                    <label for="community" class="form-label">Community</label>
                 <select class="form-select" id="community" name="community">
                     <option value="">All Communities</option>
                     {% for community in communities %}
@@ -60,6 +60,7 @@
                         %}selected{% endif %}>{{ community.name }}</option>
                     {% endfor %}
                 </select>
+                </div>
                 <div class="col-md-6">
                     <label for="publication_type" class="form-label">Publication Type</label>
                     <select class="form-select" id="publication_type" name="publication_type">
