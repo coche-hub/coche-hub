@@ -1,9 +1,9 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from flask import render_template, request
 
-from app.modules.dataset.models import Author, DataSet, DSMetaData
+from app.modules.dataset.models import Author, DataSet, DSMetaData, PublicationType
 from app.modules.dataset.services import DataSetService
 from app.modules.featuremodel.services import FeatureModelService
 from app.modules.public import public_bp
@@ -66,8 +66,20 @@ def search_datasets():
 
     pub_type = request.args.get("publication_type", "").strip()
     if pub_type:
-        query = query.filter(DSMetaData.publication_type.like(f"%{pub_type}%"))
-        logger.info(f"Filtering by publication_type: {pub_type}")
+        try:
+            for enum_member in PublicationType:
+                pub_type_enum = None
+                if enum_member.value == pub_type.lower():
+                    pub_type_enum = enum_member
+                    break
+
+            if pub_type_enum:
+                query = query.filter(DSMetaData.publication_type == pub_type_enum)
+                logger.info(f"Filtering by publication_type: {pub_type} -> {pub_type_enum.name}")
+            else:
+                logger.warning(f"Publication type '{pub_type}' not found in enum")
+        except Exception as e:
+            logger.warning(f"Error filtering by publication_type '{pub_type}': {e}")
 
     date_from = request.args.get("date_from")
     if date_from:
@@ -82,14 +94,11 @@ def search_datasets():
     if date_to:
         try:
             date_to_obj = datetime.strptime(date_to, "%Y-%m-%d")
-
-            from datetime import timedelta
-
             date_to_obj = date_to_obj + timedelta(days=1)
-            query = query.filter(DataSet.created_at <= date_to_obj)
+            query = query.filter(DataSet.created_at < date_to_obj)
             logger.info(f"Filtering to date: {date_to}")
-        except ValueError:
-            logger.warning(f"Invalid date format for date_to: {date_to}")
+        except ValueError as e:
+            logger.warning(f"Invalid date format for date_to: {date_to}. Error: {e}")
 
     datasets = query.order_by(DataSet.created_at.desc()).distinct().all()
 
