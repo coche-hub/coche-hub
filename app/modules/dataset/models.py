@@ -74,6 +74,7 @@ class DSMetrics(db.Model):
     number_of_models = db.Column(db.String(120))
     number_of_features = db.Column(db.String(120))
     average_engine_size = db.Column(db.Float, nullable=True)
+    average_consumption = db.Column(db.Float, nullable=True)
 
     def __repr__(self):
         return (

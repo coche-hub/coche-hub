@@ -20,6 +20,8 @@ class ExploreRepository(BaseRepository):
         date_to="",
         engine_size_min="",
         engine_size_max="",
+        consumption_min="",
+        consumption_max="",
         sorting="newest",
         **kwargs,
     ):
@@ -97,6 +99,27 @@ class ExploreRepository(BaseRepository):
             try:
                 max_val = float(engine_size_max)
                 query = query.filter(DSMetaData.ds_metrics.has(DSMetrics.average_engine_size <= max_val))
+            except ValueError:
+                pass
+
+        # Filter by consumption (average consumption)
+        if consumption_min and consumption_max:
+            try:
+                min_val = float(consumption_min)
+                max_val = float(consumption_max)
+                query = query.filter(DSMetaData.ds_metrics.has(DSMetrics.average_consumption.between(min_val, max_val)))
+            except ValueError:
+                pass
+        elif consumption_min:
+            try:
+                min_val = float(consumption_min)
+                query = query.filter(DSMetaData.ds_metrics.has(DSMetrics.average_consumption >= min_val))
+            except ValueError:
+                pass
+        elif consumption_max:
+            try:
+                max_val = float(consumption_max)
+                query = query.filter(DSMetaData.ds_metrics.has(DSMetrics.average_consumption <= max_val))
             except ValueError:
                 pass
 

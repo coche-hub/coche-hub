@@ -17,6 +17,8 @@ class ExploreService(BaseService):
         date_to="",
         engine_size_min="",
         engine_size_max="",
+        consumption_min="",
+        consumption_max="",
         sorting="newest",
         **kwargs,
     ):
@@ -30,6 +32,8 @@ class ExploreService(BaseService):
             date_to,
             engine_size_min,
             engine_size_max,
+            consumption_min,
+            consumption_max,
             sorting,
             **kwargs,
         )

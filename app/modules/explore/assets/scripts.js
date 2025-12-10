@@ -27,6 +27,8 @@ function send_query() {
                 date_to: document.querySelector('#date_to').value,
                 engine_size_min: document.querySelector('#engine_size_min').value,
                 engine_size_max: document.querySelector('#engine_size_max').value,
+                consumption_min: document.querySelector('#consumption_min').value,
+                consumption_max: document.querySelector('#consumption_max').value,
                 sorting: document.querySelector('[name="sorting"]:checked').value,
             };
 
@@ -200,6 +202,13 @@ function clearFilters() {
     let engineSizeMaxInput = document.querySelector('#engine_size_max');
     engineSizeMaxInput.value = "";
 
+   // Reset consumption fields
+    let consumptionMinInput = document.querySelector('#consumption_min');
+    consumptionMinInput.value = "";
+
+    let consumptionMaxInput = document.querySelector('#consumption_max');
+    consumptionMaxInput.value = ""; 
+
     // Reset the sorting option
     let sortingOptions = document.querySelectorAll('[name="sorting"]');
     sortingOptions.forEach(option => {
@@ -222,6 +231,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let dateToParam = urlParams.get('date_to');
     let engineSizeMinParam = urlParams.get('engine_size_min');
     let engineSizeMaxParam = urlParams.get('engine_size_max');
+    let consumptionMinParam = urlParams.get('consumption_min');
+    let consumptionMaxParam = urlParams.get('consumption_max');
 
     if (titleParam && titleParam.trim() !== '') {
         const titleInput = document.getElementById('title');
@@ -266,6 +277,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (engineSizeMaxParam && engineSizeMaxParam.trim() !== '') {
         const engineSizeMaxInput = document.getElementById('engine_size_max');
         engineSizeMaxInput.value = engineSizeMaxParam;
+    }
+
+    if (consumptionMinParam && consumptionMinParam.trim() !== '') {
+        const consumptionMinInput = document.getElementById('consumption_min');
+        consumptionMinInput.value = consumptionMinParam;
+    }
+
+    if (consumptionMaxParam && consumptionMaxParam.trim() !== '') {
+        const consumptionMaxInput = document.getElementById('consumption_max');
+        consumptionMaxInput.value = consumptionMaxParam;
     }
 
     const titleInput = document.getElementById('title');

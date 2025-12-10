@@ -147,6 +147,33 @@ def search_datasets():
         except ValueError:
             logger.warning(f"Invalid engine size value for max: {engine_size_max}")
 
+    # Filter by consumption (average consumption)
+    consumption_min = request.args.get("consumption_min", "").strip()
+    consumption_max = request.args.get("consumption_max", "").strip()
+
+    if consumption_min and consumption_max:
+        try:
+            min_val = float(consumption_min)
+            max_val = float(consumption_max)
+            query = query.filter(DSMetaData.ds_metrics.has(DSMetrics.average_consumption.between(min_val, max_val)))
+            logger.info(f"Filtering by consumption between {min_val} and {max_val}")
+        except ValueError:
+            logger.warning(f"Invalid consumption values: min={consumption_min}, max={consumption_max}")
+    elif consumption_min:
+        try:
+            min_val = float(consumption_min)
+            query = query.filter(DSMetaData.ds_metrics.has(DSMetrics.average_consumption >= min_val))
+            logger.info(f"Filtering by minimum consumption: {min_val}")
+        except ValueError:
+            logger.warning(f"Invalid consumption value for min: {consumption_min}")
+    elif consumption_max:
+        try:
+            max_val = float(consumption_max)
+            query = query.filter(DSMetaData.ds_metrics.has(DSMetrics.average_consumption <= max_val))
+            logger.info(f"Filtering by maximum consumption: {max_val}")
+        except ValueError:
+            logger.warning(f"Invalid consumption value for max: {consumption_max}")
+
     datasets = query.order_by(DataSet.created_at.desc()).distinct().all()
 
     logger.info(f"Found {len(datasets)} datasets matching search criteria")
