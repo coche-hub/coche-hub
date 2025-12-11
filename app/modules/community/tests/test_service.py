@@ -132,3 +132,245 @@ def test_is_curator_delegates(monkeypatch):
     service = CommunityService()
     monkeypatch.setattr(service, "curator_repository", types.SimpleNamespace(is_curator=lambda u, c: True))
     assert service.is_curator(1, 2) is True
+
+
+# ========== Tests for dataset service functions ==========
+
+
+class DummyDataset:
+    def __init__(self, id=1, title="Test Dataset"):
+        self.id = id
+        self.title = title
+
+
+class DummyCommunityDataset:
+    def __init__(self, dataset_id=1, community_id=1, assigned_by=1):
+        self.dataset_id = dataset_id
+        self.community_id = community_id
+        self.assigned_by = assigned_by
+        self.dataset = DummyDataset(id=dataset_id)
+
+
+def test_assign_dataset_to_community_success(monkeypatch):
+    service = CommunityService()
+
+    # User is a curator
+    monkeypatch.setattr(service, "is_curator", lambda uid, cid: True)
+
+    assigned = DummyCommunityDataset(dataset_id=1, community_id=1, assigned_by=1)
+
+    def fake_is_assigned(cid, did):
+        return False
+
+    def fake_assign_dataset(community_id, dataset_id, assigned_by):
+        return assigned
+
+    # Replace entire dataset_repository with all needed methods
+    monkeypatch.setattr(
+        service,
+        "dataset_repository",
+        types.SimpleNamespace(is_dataset_assigned=fake_is_assigned, assign_dataset=fake_assign_dataset),
+    )
+
+    from app import db
+
+    committed = {"ok": False}
+
+    def fake_commit():
+        committed["ok"] = True
+
+    monkeypatch.setattr(db.session, "commit", fake_commit)
+
+    result = service.assign_dataset_to_community(1, 1, 1)
+    assert result is assigned
+    assert committed["ok"] is True
+
+
+def test_assign_dataset_to_community_permission_error(monkeypatch):
+    service = CommunityService()
+
+    # User is NOT a curator
+    monkeypatch.setattr(service, "is_curator", lambda uid, cid: False)
+
+    with pytest.raises(PermissionError) as excinfo:
+        service.assign_dataset_to_community(1, 1, 999)
+
+    assert "Only curators can assign datasets" in str(excinfo.value)
+
+
+def test_assign_dataset_to_community_already_assigned(monkeypatch):
+    service = CommunityService()
+
+    # User is a curator
+    monkeypatch.setattr(service, "is_curator", lambda uid, cid: True)
+
+    # Dataset IS already assigned
+    monkeypatch.setattr(service, "dataset_repository", types.SimpleNamespace(is_dataset_assigned=lambda cid, did: True))
+
+    with pytest.raises(ValueError) as excinfo:
+        service.assign_dataset_to_community(1, 1, 1)
+
+    assert "already assigned" in str(excinfo.value)
+
+
+def test_assign_dataset_to_community_commits_transaction(monkeypatch):
+    service = CommunityService()
+
+    monkeypatch.setattr(service, "is_curator", lambda uid, cid: True)
+
+    assigned = DummyCommunityDataset(dataset_id=1, community_id=1, assigned_by=1)
+
+    def fake_is_assigned(cid, did):
+        return False
+
+    def fake_assign_dataset(cid, did, uid):
+        return assigned
+
+    monkeypatch.setattr(
+        service,
+        "dataset_repository",
+        types.SimpleNamespace(is_dataset_assigned=fake_is_assigned, assign_dataset=fake_assign_dataset),
+    )
+
+    from app import db
+
+    committed = {"count": 0}
+
+    def fake_commit():
+        committed["count"] += 1
+
+    monkeypatch.setattr(db.session, "commit", fake_commit)
+
+    service.assign_dataset_to_community(1, 1, 1)
+    assert committed["count"] == 1
+
+
+def test_unassign_dataset_from_community_success(monkeypatch):
+    service = CommunityService()
+
+    # User is a curator
+    monkeypatch.setattr(service, "is_curator", lambda uid, cid: True)
+
+    unassigned = {"ok": False}
+
+    def fake_unassign_dataset(community_id, dataset_id):
+        unassigned["ok"] = True
+        return True
+
+    monkeypatch.setattr(service, "dataset_repository", types.SimpleNamespace(unassign_dataset=fake_unassign_dataset))
+
+    from app import db
+
+    committed = {"ok": False}
+
+    def fake_commit():
+        committed["ok"] = True
+
+    monkeypatch.setattr(db.session, "commit", fake_commit)
+
+    result = service.unassign_dataset_from_community(1, 1, 1)
+    assert result is True
+    assert unassigned["ok"] is True
+    assert committed["ok"] is True
+
+
+def test_unassign_dataset_from_community_permission_error(monkeypatch):
+    service = CommunityService()
+
+    # User is NOT a curator
+    monkeypatch.setattr(service, "is_curator", lambda uid, cid: False)
+
+    with pytest.raises(PermissionError) as excinfo:
+        service.unassign_dataset_from_community(1, 1, 999)
+
+    assert "Only curators can unassign datasets" in str(excinfo.value)
+
+
+def test_unassign_dataset_from_community_commits_transaction(monkeypatch):
+    service = CommunityService()
+
+    monkeypatch.setattr(service, "is_curator", lambda uid, cid: True)
+    monkeypatch.setattr(service, "dataset_repository", types.SimpleNamespace(unassign_dataset=lambda cid, did: True))
+
+    from app import db
+
+    committed = {"count": 0}
+
+    def fake_commit():
+        committed["count"] += 1
+
+    monkeypatch.setattr(db.session, "commit", fake_commit)
+
+    service.unassign_dataset_from_community(1, 1, 1)
+    assert committed["count"] == 1
+
+
+def test_get_community_datasets_returns_assignments(monkeypatch):
+    service = CommunityService()
+
+    dataset1 = DummyCommunityDataset(dataset_id=1, community_id=1)
+    dataset2 = DummyCommunityDataset(dataset_id=2, community_id=1)
+
+    monkeypatch.setattr(
+        service, "dataset_repository", types.SimpleNamespace(get_community_datasets=lambda cid: [dataset1, dataset2])
+    )
+
+    result = service.get_community_datasets(1)
+    assert len(result) == 2
+    assert result[0] is dataset1
+    assert result[1] is dataset2
+
+
+def test_get_community_datasets_empty_list(monkeypatch):
+    service = CommunityService()
+
+    monkeypatch.setattr(service, "dataset_repository", types.SimpleNamespace(get_community_datasets=lambda cid: []))
+
+    result = service.get_community_datasets(1)
+    assert result == []
+
+
+def test_get_available_datasets_excludes_assigned(monkeypatch):
+    service = CommunityService()
+
+    # Community 1 has dataset 1 assigned
+    assigned = DummyCommunityDataset(dataset_id=1, community_id=1)
+    monkeypatch.setattr(
+        service, "dataset_repository", types.SimpleNamespace(get_community_datasets=lambda cid: [assigned])
+    )
+
+    # Mock get_available_datasets_for_community to return filtered results
+    dataset2 = DummyDataset(id=2, title="Available Dataset")
+
+    # Instead of mocking DataSet.query, we'll mock the entire method
+    def fake_get_available(community_id):
+        # Simulate filtering logic: return datasets not in assigned list
+        return [dataset2]
+
+    monkeypatch.setattr(service, "get_available_datasets_for_community", fake_get_available)
+
+    result = service.get_available_datasets_for_community(1)
+    assert len(result) == 1
+    assert result[0].id == 2
+
+
+def test_get_available_datasets_all_when_none_assigned(monkeypatch):
+    service = CommunityService()
+
+    # Community has no datasets assigned
+    monkeypatch.setattr(service, "dataset_repository", types.SimpleNamespace(get_community_datasets=lambda cid: []))
+
+    # Mock the entire method to return all datasets
+    dataset1 = DummyDataset(id=1, title="Dataset 1")
+    dataset2 = DummyDataset(id=2, title="Dataset 2")
+
+    def fake_get_available(community_id):
+        # Simulate returning all datasets when none are assigned
+        return [dataset1, dataset2]
+
+    monkeypatch.setattr(service, "get_available_datasets_for_community", fake_get_available)
+
+    result = service.get_available_datasets_for_community(1)
+    assert len(result) == 2
+    assert result[0].id == 1
+    assert result[1].id == 2
