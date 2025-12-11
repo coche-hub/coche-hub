@@ -54,20 +54,22 @@ def test_update_community_sets_fields_and_calls_update(monkeypatch):
     # get_by_id should return the community
     monkeypatch.setattr(service, "get_by_id", lambda cid: community)
 
-    captured = {}
+    committed = {"ok": False}
 
-    def fake_update(obj):
-        captured["obj"] = obj
-        return obj
+    def fake_commit():
+        committed["ok"] = True
 
-    monkeypatch.setattr(service, "update", fake_update)
+    from app import db
+
+    monkeypatch.setattr(db.session, "commit", fake_commit)
 
     updated = service.update_community(5, name="new", description="new desc", logo="logo.png")
 
-    assert captured["obj"].name == "new"
-    assert captured["obj"].description == "new desc"
-    assert captured["obj"].logo == "logo.png"
-    assert updated is captured["obj"]
+    assert community.name == "new"
+    assert community.description == "new desc"
+    assert community.logo == "logo.png"
+    assert updated is community
+    assert committed["ok"] is True
 
 
 def test_delete_community_delegates_to_base_delete(monkeypatch):
