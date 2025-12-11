@@ -48,7 +48,8 @@ class CommunityService(BaseService):
         if logo is not None:
             community.logo = logo
 
-        return self.update(community)
+        db.session.commit()
+        return community
 
     def delete_community(self, community_id: int) -> bool:
         community = self.get_by_id(community_id)
