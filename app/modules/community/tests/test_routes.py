@@ -340,3 +340,351 @@ def test_unassign_dataset_success(monkeypatch):
         rv = client.post("/community/1/datasets/1/unassign", follow_redirects=False)
         assert rv.status_code == 302  # redirect after success
         assert b"/community/1/datasets/manage" in rv.data
+
+
+# ========== Tests for create route ==========
+
+
+def test_create_get_requires_login(monkeypatch):
+    app = setup_app(monkeypatch)
+    with app.test_client() as client:
+        rv = client.get("/community/create")
+        assert rv.status_code in (302, 401)
+
+
+def test_create_get_shows_form_when_logged_in(monkeypatch):
+    app = setup_app(monkeypatch)
+    app.config["LOGIN_DISABLED"] = True
+
+    class MockUser:
+        id = 1
+        is_authenticated = True
+
+        class MockProfile:
+            name = "Test"
+            surname = "User"
+
+        profile = MockProfile()
+
+    monkeypatch.setattr("flask_login.utils._get_user", lambda: MockUser())
+
+    with app.test_client() as client:
+        rv = client.get("/community/create")
+        assert rv.status_code == 200
+
+
+def test_create_post_success_without_curators(monkeypatch):
+    app = setup_app(monkeypatch)
+    app.config["LOGIN_DISABLED"] = True
+    app.config["WTF_CSRF_ENABLED"] = False
+    from app.modules.community.services import CommunityService
+
+    class MockUser:
+        id = 1
+        is_authenticated = True
+
+    monkeypatch.setattr("flask_login.utils._get_user", lambda: MockUser())
+
+    created_community = DummyCommunity(id=5, name="New Community")
+    monkeypatch.setattr(
+        CommunityService, "create_community", lambda self, name, description, creator_id, logo: created_community
+    )
+
+    with app.test_client() as client:
+        rv = client.post(
+            "/community/create",
+            data={"name": "New Community", "description": "Test description"},
+            follow_redirects=False,
+        )
+        assert rv.status_code == 302
+        assert b"/community/5" in rv.data
+
+
+def test_create_post_handles_service_error(monkeypatch):
+    app = setup_app(monkeypatch)
+    app.config["LOGIN_DISABLED"] = True
+    app.config["WTF_CSRF_ENABLED"] = False
+    from app.modules.community.services import CommunityService
+
+    class MockUser:
+        id = 1
+        is_authenticated = True
+
+        class MockProfile:
+            name = "Test"
+            surname = "User"
+
+        profile = MockProfile()
+
+    monkeypatch.setattr("flask_login.utils._get_user", lambda: MockUser())
+
+    def raise_error(*args, **kwargs):
+        raise Exception("Creation failed")
+
+    monkeypatch.setattr(CommunityService, "create_community", raise_error)
+
+    with app.test_client() as client:
+        rv = client.post("/community/create", data={"name": "New Community", "description": "Test description"})
+        assert rv.status_code == 200  # renders form again
+
+
+# ========== Tests for edit route ==========
+
+
+def test_edit_get_requires_login(monkeypatch):
+    app = setup_app(monkeypatch)
+    with app.test_client() as client:
+        rv = client.get("/community/1/edit")
+        assert rv.status_code in (302, 401)
+
+
+def test_edit_returns_404_for_missing_community(monkeypatch):
+    app = setup_app(monkeypatch)
+    app.config["LOGIN_DISABLED"] = True
+    from app.modules.community.services import CommunityService
+
+    class MockUser:
+        id = 1
+        is_authenticated = True
+
+    monkeypatch.setattr("flask_login.utils._get_user", lambda: MockUser())
+    monkeypatch.setattr(CommunityService, "get_by_id", lambda self, cid: None)
+
+    with app.test_client() as client:
+        rv = client.get("/community/999/edit")
+        assert rv.status_code == 404
+
+
+def test_edit_returns_403_for_non_curator(monkeypatch):
+    app = setup_app(monkeypatch)
+    app.config["LOGIN_DISABLED"] = True
+    from app.modules.community.services import CommunityService
+
+    class MockUser:
+        id = 1
+        is_authenticated = True
+
+    monkeypatch.setattr("flask_login.utils._get_user", lambda: MockUser())
+
+    dummy = DummyCommunity(id=1, name="Test")
+    monkeypatch.setattr(CommunityService, "get_by_id", lambda self, cid: dummy)
+    monkeypatch.setattr(CommunityService, "is_curator", lambda self, uid, cid: False)
+
+    with app.test_client() as client:
+        rv = client.get("/community/1/edit")
+        assert rv.status_code == 403
+
+
+def test_edit_get_shows_form_for_curator(monkeypatch):
+    app = setup_app(monkeypatch)
+    app.config["LOGIN_DISABLED"] = True
+    from app.modules.community.services import CommunityService
+
+    class MockUser:
+        id = 1
+        is_authenticated = True
+
+        class MockProfile:
+            name = "Test"
+            surname = "User"
+
+        profile = MockProfile()
+
+    monkeypatch.setattr("flask_login.utils._get_user", lambda: MockUser())
+
+    dummy = DummyCommunity(id=1, name="Test Community")
+    monkeypatch.setattr(CommunityService, "get_by_id", lambda self, cid: dummy)
+    monkeypatch.setattr(CommunityService, "is_curator", lambda self, uid, cid: True)
+    monkeypatch.setattr(CommunityService, "get_community_curators", lambda self, cid: [])
+
+    with app.test_client() as client:
+        rv = client.get("/community/1/edit")
+        assert rv.status_code == 200
+
+
+def test_edit_post_updates_community(monkeypatch):
+    app = setup_app(monkeypatch)
+    app.config["LOGIN_DISABLED"] = True
+    app.config["WTF_CSRF_ENABLED"] = False
+    from app.modules.community.services import CommunityService
+
+    class MockUser:
+        id = 1
+        is_authenticated = True
+
+    monkeypatch.setattr("flask_login.utils._get_user", lambda: MockUser())
+
+    dummy = DummyCommunity(id=1, name="Old Name")
+    monkeypatch.setattr(CommunityService, "get_by_id", lambda self, cid: dummy)
+    monkeypatch.setattr(CommunityService, "is_curator", lambda self, uid, cid: True)
+    monkeypatch.setattr(CommunityService, "get_community_curators", lambda self, cid: [])
+    monkeypatch.setattr(CommunityService, "update_community", lambda self, **kwargs: None)
+
+    with app.test_client() as client:
+        rv = client.post(
+            "/community/1/edit", data={"name": "Updated Name", "description": "Updated desc"}, follow_redirects=False
+        )
+        assert rv.status_code == 302
+        assert b"/community/1" in rv.data
+
+
+# ========== Tests for delete route ==========
+
+
+def test_delete_requires_login(monkeypatch):
+    app = setup_app(monkeypatch)
+    with app.test_client() as client:
+        rv = client.post("/community/1/delete")
+        assert rv.status_code in (302, 401)
+
+
+def test_delete_requires_curator_permission(monkeypatch):
+    app = setup_app(monkeypatch)
+    app.config["LOGIN_DISABLED"] = True
+    from app.modules.community.services import CommunityService
+
+    class MockUser:
+        id = 1
+        is_authenticated = True
+
+    monkeypatch.setattr("flask_login.utils._get_user", lambda: MockUser())
+    monkeypatch.setattr(CommunityService, "is_curator", lambda self, uid, cid: False)
+
+    with app.test_client() as client:
+        rv = client.post("/community/1/delete")
+        assert rv.status_code == 403
+
+
+def test_delete_success_redirects_to_index(monkeypatch):
+    app = setup_app(monkeypatch)
+    app.config["LOGIN_DISABLED"] = True
+    from app.modules.community.services import CommunityService
+
+    class MockUser:
+        id = 1
+        is_authenticated = True
+
+    monkeypatch.setattr("flask_login.utils._get_user", lambda: MockUser())
+    monkeypatch.setattr(CommunityService, "is_curator", lambda self, uid, cid: True)
+    monkeypatch.setattr(CommunityService, "delete_community", lambda self, cid: None)
+
+    with app.test_client() as client:
+        rv = client.post("/community/1/delete", follow_redirects=False)
+        assert rv.status_code == 302
+        assert b"/community" in rv.data
+
+
+def test_delete_handles_error(monkeypatch):
+    app = setup_app(monkeypatch)
+    app.config["LOGIN_DISABLED"] = True
+    from app.modules.community.services import CommunityService
+
+    class MockUser:
+        id = 1
+        is_authenticated = True
+
+    monkeypatch.setattr("flask_login.utils._get_user", lambda: MockUser())
+    monkeypatch.setattr(CommunityService, "is_curator", lambda self, uid, cid: True)
+
+    def raise_error(self, cid):
+        raise Exception("Cannot delete")
+
+    monkeypatch.setattr(CommunityService, "delete_community", raise_error)
+
+    with app.test_client() as client:
+        rv = client.post("/community/1/delete", follow_redirects=False)
+        assert rv.status_code == 302  # redirects to detail with flash
+
+
+# ========== Tests for list_curators route ==========
+
+
+def test_list_curators_returns_200(monkeypatch):
+    app = setup_app(monkeypatch)
+    # Mock render_template in the routes module
+    from app.modules.community import routes
+    from app.modules.community.services import CommunityService
+
+    monkeypatch.setattr(routes, "render_template", lambda *args, **kwargs: "OK")
+    monkeypatch.setattr(CommunityService, "get_community_curators", lambda self, cid: [])
+
+    with app.test_client() as client:
+        rv = client.get("/community/1/curators")
+        assert rv.status_code == 200
+
+
+# ========== Tests for add_curator route ==========
+
+
+def test_add_curator_requires_login(monkeypatch):
+    app = setup_app(monkeypatch)
+    with app.test_client() as client:
+        rv = client.post("/community/1/curators/add", data={"user_id": "2"})
+        assert rv.status_code in (302, 401)
+
+
+def test_add_curator_requires_curator_permission(monkeypatch):
+    app = setup_app(monkeypatch)
+    app.config["LOGIN_DISABLED"] = True
+    from app.modules.community.services import CommunityService
+
+    class MockUser:
+        id = 1
+        is_authenticated = True
+
+    monkeypatch.setattr("flask_login.utils._get_user", lambda: MockUser())
+    monkeypatch.setattr(CommunityService, "is_curator", lambda self, uid, cid: False)
+
+    with app.test_client() as client:
+        rv = client.post("/community/1/curators/add", data={"user_id": "2"})
+        assert rv.status_code == 403
+
+
+def test_add_curator_missing_identifier_returns_400(monkeypatch):
+    app = setup_app(monkeypatch)
+    app.config["LOGIN_DISABLED"] = True
+    from app.modules.community.services import CommunityService
+
+    class MockUser:
+        id = 1
+        is_authenticated = True
+
+    monkeypatch.setattr("flask_login.utils._get_user", lambda: MockUser())
+    monkeypatch.setattr(CommunityService, "is_curator", lambda self, uid, cid: True)
+
+    with app.test_client() as client:
+        rv = client.post("/community/1/curators/add", data={})
+        assert rv.status_code == 400
+
+
+# ========== Tests for my_communities route ==========
+
+
+def test_my_communities_requires_login(monkeypatch):
+    app = setup_app(monkeypatch)
+    with app.test_client() as client:
+        rv = client.get("/community/my-communities")
+        assert rv.status_code in (302, 401)
+
+
+def test_my_communities_returns_200_when_logged_in(monkeypatch):
+    app = setup_app(monkeypatch)
+    app.config["LOGIN_DISABLED"] = True
+    from app.modules.community.services import CommunityService
+
+    class MockUser:
+        id = 1
+        is_authenticated = True
+
+        class MockProfile:
+            name = "Test"
+            surname = "User"
+
+        profile = MockProfile()
+
+    monkeypatch.setattr("flask_login.utils._get_user", lambda: MockUser())
+    monkeypatch.setattr(CommunityService, "get_user_communities", lambda self, uid: [])
+
+    with app.test_client() as client:
+        rv = client.get("/community/my-communities")
+        assert rv.status_code == 200

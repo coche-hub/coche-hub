@@ -134,6 +134,101 @@ def test_is_curator_delegates(monkeypatch):
     assert service.is_curator(1, 2) is True
 
 
+def test_get_community_by_name_returns_community(monkeypatch):
+    service = CommunityService()
+    community = DummyCommunity(id=5, name="TestCommunity")
+
+    monkeypatch.setattr(service, "repository", types.SimpleNamespace(get_by_name=lambda name: community))
+
+    result = service.get_community_by_name("TestCommunity")
+    assert result is community
+
+
+def test_get_community_by_name_returns_none_when_not_found(monkeypatch):
+    service = CommunityService()
+
+    monkeypatch.setattr(service, "repository", types.SimpleNamespace(get_by_name=lambda name: None))
+
+    result = service.get_community_by_name("NonExistent")
+    assert result is None
+
+
+def test_get_all_communities_returns_list(monkeypatch):
+    service = CommunityService()
+    community1 = DummyCommunity(id=1, name="Community1")
+    community2 = DummyCommunity(id=2, name="Community2")
+
+    monkeypatch.setattr(
+        service, "repository", types.SimpleNamespace(get_all_communities=lambda: [community1, community2])
+    )
+
+    result = service.get_all_communities()
+    assert len(result) == 2
+    assert result[0] is community1
+    assert result[1] is community2
+
+
+def test_get_all_communities_returns_empty_list(monkeypatch):
+    service = CommunityService()
+
+    monkeypatch.setattr(service, "repository", types.SimpleNamespace(get_all_communities=lambda: []))
+
+    result = service.get_all_communities()
+    assert result == []
+
+
+def test_get_community_curators_returns_list(monkeypatch):
+    service = CommunityService()
+    curator1 = DummyCurator(user_id=1, community_id=5)
+    curator2 = DummyCurator(user_id=2, community_id=5)
+
+    monkeypatch.setattr(
+        service,
+        "curator_repository",
+        types.SimpleNamespace(get_curators_by_community=lambda cid: [curator1, curator2]),
+    )
+
+    result = service.get_community_curators(5)
+    assert len(result) == 2
+    assert result[0] is curator1
+    assert result[1] is curator2
+
+
+def test_get_community_curators_returns_empty_list(monkeypatch):
+    service = CommunityService()
+
+    monkeypatch.setattr(service, "curator_repository", types.SimpleNamespace(get_curators_by_community=lambda cid: []))
+
+    result = service.get_community_curators(1)
+    assert result == []
+
+
+def test_get_user_communities_returns_list(monkeypatch):
+    service = CommunityService()
+    community1 = DummyCommunity(id=1, name="Community1")
+    community2 = DummyCommunity(id=2, name="Community2")
+
+    monkeypatch.setattr(
+        service,
+        "curator_repository",
+        types.SimpleNamespace(get_communities_by_user=lambda uid: [community1, community2]),
+    )
+
+    result = service.get_user_communities(7)
+    assert len(result) == 2
+    assert result[0] is community1
+    assert result[1] is community2
+
+
+def test_get_user_communities_returns_empty_list(monkeypatch):
+    service = CommunityService()
+
+    monkeypatch.setattr(service, "curator_repository", types.SimpleNamespace(get_communities_by_user=lambda uid: []))
+
+    result = service.get_user_communities(999)
+    assert result == []
+
+
 # ========== Tests for dataset service functions ==========
 
 
