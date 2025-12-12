@@ -796,7 +796,7 @@ class DataSetRecommendationService:
             list[DataSet]: Up to 3 most similar datasets, sorted by similarity
         """
 
-        all_datasets = self.dataset_repository.get_all()
+        all_datasets = self.dataset_repository.get_all_synchronized()
 
         current_dataset_id = dataset.id
         other_datasets = [ds for ds in all_datasets if ds.id != current_dataset_id]
