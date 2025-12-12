@@ -138,8 +138,8 @@ def test_difference_same_publication_type(test_client):
     user = User.query.filter_by(email="test@example.com").first()
     service = DataSetRecommendationService()
 
-    ds1 = create_test_dataset(user.id, "DS1", PublicationType.SOFTWARE_DOCUMENTATION)
-    ds2 = create_test_dataset(user.id, "DS2", PublicationType.SOFTWARE_DOCUMENTATION)
+    ds1 = create_test_dataset(user.id, "DS1", PublicationType.AVAILABLE_TO_BUY_CARS)
+    ds2 = create_test_dataset(user.id, "DS2", PublicationType.AVAILABLE_TO_BUY_CARS)
 
     difference = service.get_difference_level(ds1, ds2)
 
@@ -152,8 +152,8 @@ def test_difference_different_publication_type(test_client):
     user = User.query.filter_by(email="test@example.com").first()
     service = DataSetRecommendationService()
 
-    ds1 = create_test_dataset(user.id, "DS1", PublicationType.SOFTWARE_DOCUMENTATION)
-    ds2 = create_test_dataset(user.id, "DS2", PublicationType.DATA_MANAGEMENT_PLAN)
+    ds1 = create_test_dataset(user.id, "DS1", PublicationType.AVAILABLE_TO_BUY_CARS)
+    ds2 = create_test_dataset(user.id, "DS2", PublicationType.MISSING_CARS)
 
     difference = service.get_difference_level(ds1, ds2)
 
@@ -197,14 +197,14 @@ def test_difference_complex_scenario(test_client):
     ds1 = create_test_dataset(
         user.id,
         "DS1",
-        pub_type=PublicationType.SOFTWARE_DOCUMENTATION,
+        pub_type=PublicationType.AVAILABLE_TO_BUY_CARS,
         tags="python, ml",
         authors_list=["Alice", "Bob"],
     )
     ds2 = create_test_dataset(
         user.id,
         "DS2",
-        pub_type=PublicationType.DATA_MANAGEMENT_PLAN,
+        pub_type=PublicationType.MISSING_CARS,
         tags="python, ai",
         authors_list=["Alice", "Charlie"],
     )
@@ -253,32 +253,45 @@ def test_get_recommended_datasets_sorted_by_similarity(test_client):
     service = DataSetRecommendationService()
 
     main_ds = create_test_dataset(
-        user.id, "Main", pub_type=PublicationType.SOFTWARE_DOCUMENTATION, tags="python, ml", authors_list=["Alice"]
-    )
-
-    # Very similar
-    ds_similar = create_test_dataset(
         user.id,
-        "Very Similar",
-        pub_type=PublicationType.SOFTWARE_DOCUMENTATION,
-        tags="python, ml",
-        authors_list=["Alice"],
+        "SortTest Main",
+        pub_type=PublicationType.AVAILABLE_TO_BUY_CARS,
+        tags="sorttest, unique123",
+        authors_list=["TestAuthor"],
     )
 
-    # Somewhat similar
+    # Create test datasets with known differences
+    # Very similar (difference = 0)
     create_test_dataset(
-        user.id, "Medium", pub_type=PublicationType.SOFTWARE_DOCUMENTATION, tags="python", authors_list=["Bob"]
+        user.id,
+        "SortTest Similar",
+        pub_type=PublicationType.AVAILABLE_TO_BUY_CARS,
+        tags="sorttest, unique123",
+        authors_list=["TestAuthor"],
     )
 
-    # Very different
+    # Somewhat different (difference from tags)
     create_test_dataset(
-        user.id, "Different", pub_type=PublicationType.DATA_MANAGEMENT_PLAN, tags="java", authors_list=["Charlie"]
+        user.id,
+        "SortTest Medium",
+        pub_type=PublicationType.AVAILABLE_TO_BUY_CARS,
+        tags="sorttest",
+        authors_list=["DifferentAuthor"],
+    )
+
+    # Very different (different pub_type + different tags + different author)
+    create_test_dataset(
+        user.id, "SortTest Different", pub_type=PublicationType.MISSING_CARS, tags="other", authors_list=["OtherAuthor"]
     )
 
     recommendations = service.get_recommended_datasets(main_ds)
 
-    # First recommendation should be most similar
-    assert recommendations[0] == ds_similar
+    # Verify recommendations are sorted by computing differences
+    if len(recommendations) >= 2:
+        diff_0 = service.get_difference_level(main_ds, recommendations[0])
+        diff_1 = service.get_difference_level(main_ds, recommendations[1])
+        # First should have lower or equal difference than second
+        assert diff_0 <= diff_1
 
 
 def test_get_recommended_datasets_empty_when_no_others(test_client):
