@@ -1,3 +1,30 @@
+## [4.0.0](https://github.com/coche-hub/coche-hub/compare/v3.0.0...v4.0.0) (2025-12-12)
+
+
+### ⚠ BREAKING CHANGES
+
+* fakenodo unsynchronize
+* doi error message added
+* publication types changed
+
+### Features
+
+* publication types changed ([197048e](https://github.com/coche-hub/coche-hub/commit/197048e48a91cea50f399a04f4d4faaa54bdd3bc))
+
+
+### Bug Fixes
+
+* doi error message added ([ee17e6c](https://github.com/coche-hub/coche-hub/commit/ee17e6c80e6a63da25cfa28a20881768dbcd5034))
+* error handling for incorrect DOI format ([eedaebd](https://github.com/coche-hub/coche-hub/commit/eedaebd1a630af0c447a35a8634e1b4fe1f5a5bf))
+* fail adding curators when editing ([f2609b3](https://github.com/coche-hub/coche-hub/commit/f2609b3a34b2e67421f59bae87a8f04910e304d1))
+* fail when editing a community ([5dc947d](https://github.com/coche-hub/coche-hub/commit/5dc947d1d7e048f067b7b9b9ed4a1fc19a8eb337))
+* fakenodo unsynchronize ([e24d271](https://github.com/coche-hub/coche-hub/commit/e24d271763583b7f829f8dbdb2f0aee4b094104e))
+* Formatting issues ([055e8f9](https://github.com/coche-hub/coche-hub/commit/055e8f9114ab5af7b98636f3d6ce69e554696e66))
+* show unsynchronized ([f72ad2d](https://github.com/coche-hub/coche-hub/commit/f72ad2db624f890712c31fab723f7beba9f948e1))
+* test recommendations ([707977a](https://github.com/coche-hub/coche-hub/commit/707977a12cce551dcf48c8161c08bac1beb0b271))
+* test suit for update community ([f075029](https://github.com/coche-hub/coche-hub/commit/f0750293ba623f9e857a81dee837c7686d2800ff))
+* Update migrations ([8a7530d](https://github.com/coche-hub/coche-hub/commit/8a7530db2275d2f72666efe1739f42c78f8ebdcf))
+
 ## [3.0.0](https://github.com/coche-hub/coche-hub/compare/v2.1.0...v3.0.0) (2025-12-10)
 
 
