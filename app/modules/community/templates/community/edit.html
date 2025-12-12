@@ -157,22 +157,10 @@ endblock %} {% block content %}
               // mutating the client-side list. The Add button's server-submit
               // handler is defined later; do not add a local append handler here.
 
-              // Also, on page load populate hidden inputs for existing curators so they are
-              // preserved on form submit. The server passed `curators` to the template.
-              try{
-                const existingCurators = {{ curators_data|tojson }};
-                existingCurators.forEach(function(c){
-                  const uname = (c.user && (c.user.name || c.user.email)) || '';
-                  const uorcid = (c.user && c.user.orcid) || '';
-                  const uff = '';
-                  if(uname){
-                    const h_name = document.createElement('input'); h_name.type='hidden'; h_name.name='curator_name'; h_name.value=uname;
-                    const h_aff = document.createElement('input'); h_aff.type='hidden'; h_aff.name='curator_affiliation'; h_aff.value=uff;
-                    const h_orc = document.createElement('input'); h_orc.type='hidden'; h_orc.name='curator_orcid'; h_orc.value=uorcid;
-                    hidden.appendChild(h_name); hidden.appendChild(h_aff); hidden.appendChild(h_orc);
-                  }
-                });
-              }catch(e){ /* ignore if templating/json fails */ }
+              // Note: We do NOT populate hidden inputs for existing curators.
+              // Existing curators are already in the database and don't need to be
+              // resubmitted with every form edit. Only new curators added via the
+              // "Add curator" button need to be sent to the server.
 
               // Override Add button behavior: submit a small POST to the server to add the curator
               // and reload/redirect back to the edit page so the curator list is refreshed server-side.
