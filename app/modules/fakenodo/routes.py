@@ -47,8 +47,13 @@ def create_deposition():
     body = request.get_json() or {}
     dep_id = storage["next_id"]
 
+    # Generate a unique conceptrecid (concept record id)
+    # This simulates Zenodo's concept record for the deposition series
+    conceptrecid = dep_id * 1000
+
     deposition = {
         "id": dep_id,
+        "conceptrecid": conceptrecid,  # Added to match Zenodo's response
         "metadata": body.get("metadata", {}),
         "files": [],
         "published": False,
