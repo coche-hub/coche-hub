@@ -29,8 +29,20 @@ class DataSetForm(FlaskForm):
         choices=[(pt.value, pt.name.replace("_", " ").title()) for pt in PublicationType],
         validators=[DataRequired()],
     )
-    publication_doi = StringField("Publication DOI", validators=[Optional(), URL()])
-    dataset_doi = StringField("Dataset DOI", validators=[Optional(), URL()])
+    publication_doi = StringField(
+        "Publication DOI",
+        validators=[
+            Optional(),
+            URL(message="El DOI debe ser una URL válida. Formato esperado: https://doi.org/10.xxxx/xxxxx"),
+        ],
+    )
+    dataset_doi = StringField(
+        "Dataset DOI",
+        validators=[
+            Optional(),
+            URL(message="El DOI debe ser una URL válida. Formato esperado: https://doi.org/10.xxxx/xxxxx"),
+        ],
+    )
     tags = StringField("Tags (separated by commas)")
     authors = FieldList(FormField(AuthorForm))
 
@@ -69,8 +81,20 @@ class EditDataSetForm(FlaskForm):
         choices=[(pt.value, pt.name.replace("_", " ").title()) for pt in PublicationType],
         validators=[DataRequired()],
     )
-    publication_doi = StringField("Publication DOI", validators=[Optional(), URL()])
-    dataset_doi = StringField("Dataset DOI", validators=[Optional(), URL()])
+    publication_doi = StringField(
+        "Publication DOI",
+        validators=[
+            Optional(),
+            URL(message="El DOI debe ser una URL válida. Formato esperado: https://doi.org/10.xxxx/xxxxx"),
+        ],
+    )
+    dataset_doi = StringField(
+        "Dataset DOI",
+        validators=[
+            Optional(),
+            URL(message="El DOI debe ser una URL válida. Formato esperado: https://doi.org/10.xxxx/xxxxx"),
+        ],
+    )
     tags = StringField("Tags (separated by commas)")
 
     # CSV-specific fields
