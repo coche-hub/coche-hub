@@ -98,7 +98,7 @@ class DataSetSeeder(BaseSeeder):
             publication_type=publication_type,
             tags=tags,
             ds_metrics=ds_metrics,
-            dataset_doi=f"10.1234/example.{csv_filename.replace('.csv', '')}",
+            dataset_doi=f"https://doi.org/10.1000/182{csv_filename.replace('.csv', '')}",
         )
 
         # Add sample authors
