@@ -41,7 +41,7 @@ Actas de las reuniones en las que se tomaron decisiones importantes.
 
 ---
 
-### ACTA 2024-01
+### ACTA 2025-01
 
 *(usar el formato `año-identificador`. Se recomienda usar un número incremental.  
 La primera reunión deberá incluir los acuerdos del **acta fundacional**, según lo indicado en el enunciado del proyecto).*
@@ -56,28 +56,28 @@ La primera reunión deberá incluir los acuerdos del **acta fundacional**, segú
 
 **Acuerdos tomados:**
 
-- **Acuerdo 2024-01-01:** Si un miembro del equipo falta a tres reuniones sin motivo de peso será expulsado.
-- **Acuerdo 2024-01-02:** Si un miembro se niega a participar en las actividades y a realizar su trabajo, se hará una votación para valorar su expulsión.
-- **Acuerdo 2024-01-03:** El grupo se compromete a realizar un trabajo que nos permita alcanzar la nota de aprobado.
-- **Acuerdo 2024-01-04:** Se acepta el uso de IA en el trabajo siempre y cuando se reconozca su uso responsable
-- **Acuerdo 2024-01-05:** En el caso de que algún integrante abandone el grupo de proyecto, este ha de informar al resto del grupo ofreciendo una justificación.
-- **Acuerdo 2024-01-06:** Nos comprometemos a realizar los work items seleccionados y los obligatorios
+- **Acuerdo 2025-01-01:** Si un miembro del equipo falta a tres reuniones sin motivo de peso será expulsado.
+- **Acuerdo 2025-01-02:** Si un miembro se niega a participar en las actividades y a realizar su trabajo, se hará una votación para valorar su expulsión.
+- **Acuerdo 2025-01-03:** El grupo se compromete a realizar un trabajo que nos permita alcanzar la nota de aprobado.
+- **Acuerdo 2025-01-04:** Se acepta el uso de IA en el trabajo siempre y cuando se reconozca su uso responsable
+- **Acuerdo 2025-01-05:** En el caso de que algún integrante abandone el grupo de proyecto, este ha de informar al resto del grupo ofreciendo una justificación.
+- **Acuerdo 2025-01-06:** Nos comprometemos a realizar los work items seleccionados y los obligatorios
 
 ---
 
-### ACTA 2024-02
+### ACTA 2025-02
 
 **Asistentes:**  
-- A
-- B
-- C
-
+- Herrera Romero, Jose Ángel
+- Milá de la roca dos Santos, Javier Ignacio
+- Palmas Santos, Carlos
+- Ortega Almirón, Raquel
+- Toledo González, Manuel
+- Sánchez Ruiz, Ángel
 **Acuerdos tomados:**
 
-- **Acuerdo 2024-02-01:** Redacción del acuerdo.
-- **Acuerdo 2024-02-02:** Redacción del acuerdo.
-- …
-- **Acuerdo 2024-02-NN:** Redacción del acuerdo.
+- **Acuerdo 2025-02-01:** Política de commits.
+- **Acuerdo 2025-02-02:** Política de ramas.
 
 ---
 
