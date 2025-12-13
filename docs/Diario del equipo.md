@@ -77,6 +77,7 @@ Actas de las reuniones en las que se tomaron decisiones importantes.
 
 - **Acuerdo 2025-02-01:** Política de commits.
 - **Acuerdo 2025-02-02:** Política de ramas.
+- **Acuerdo 2025-02-03:** Plantillas de issues.
 
 ---
 
