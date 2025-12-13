@@ -171,7 +171,7 @@ class ZenodoService(BaseService):
                 for author in dataset.ds_meta_data.authors
             ],
             "keywords": (
-                ["uvlhub"] if not dataset.ds_meta_data.tags else dataset.ds_meta_data.tags.split(", ") + ["uvlhub"]
+                ["cochehub"] if not dataset.ds_meta_data.tags else dataset.ds_meta_data.tags.split(", ") + ["cochehub"]
             ),
             "access_right": "open",
             "license": "CC-BY-4.0",
@@ -191,21 +191,20 @@ class ZenodoService(BaseService):
 
         Args:
             deposition_id (int): The ID of the deposition in Zenodo.
-            file_obj: Can be a FeatureModel object (legacy) or Hubfile object.
+            file_obj: Hubfile object representing the CSV file.
             user: The User object representing the file owner.
 
         Returns:
             dict: The response in JSON format with the details of the uploaded file.
         """
-        # Check if it's a Hubfile or FeatureModel
+        # Use Hubfile system
         from app.modules.hubfile.models import Hubfile
 
         if isinstance(file_obj, Hubfile):
-            # New system: Hubfile
             filename = file_obj.name
         else:
-            # Legacy system: FeatureModel
-            filename = file_obj.fm_meta_data.uvl_filename
+            # Should not happen with CSV-only system
+            raise ValueError("Invalid file object type. Expected Hubfile.")
 
         data = {"name": filename}
         user_id = current_user.id if user is None else user.id
