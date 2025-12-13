@@ -60,8 +60,13 @@ def selenium(module, driver):
             click.echo(click.style(f"🚀 Running Selenium tests in {env_label}...", fg="cyan"))
             click.echo(f"→ Command: {' '.join(cmd)}")
 
+            # Set PYTHONPATH to include project root for imports to work
+            env_vars = os.environ.copy()
+            project_root = os.getcwd()  # Assumes rosemary is run from project root
+            env_vars["PYTHONPATH"] = project_root
+
             try:
-                subprocess.run(cmd, check=True)
+                subprocess.run(cmd, check=True, env=env_vars)
                 click.echo(click.style("✅ Selenium tests completed successfully.", fg="green"))
             except subprocess.CalledProcessError:
                 click.echo(click.style("❌ Selenium tests failed.", fg="red"))
