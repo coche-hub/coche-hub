@@ -27,11 +27,11 @@
 
 ## Resumen de reuniones del equipo
 
-- **Total de reuniones:** TR
-- **Total de reuniones presenciales:** 0
-- **Total de reuniones virtuales:** TRV
-- **Total de tiempo empleado en reuniones presenciales:** TTRP
-- **Total de tiempo empleado en reuniones virtuales:** TTRV
+- **Total de reuniones:** 7
+- **Total de reuniones presenciales:** 2
+- **Total de reuniones virtuales:** 5
+- **Total de tiempo empleado en reuniones presenciales:** 2 horas
+- **Total de tiempo empleado en reuniones virtuales:** 4,5 horas
 
 ---
 
@@ -43,8 +43,7 @@ Actas de las reuniones en las que se tomaron decisiones importantes.
 
 ### ACTA 2025-01
 
-*(usar el formato `año-identificador`. Se recomienda usar un número incremental.  
-La primera reunión deberá incluir los acuerdos del **acta fundacional**, según lo indicado en el enunciado del proyecto).*
+
 
 **Asistentes:**  
 - Herrera Romero, Jose Ángel
@@ -78,6 +77,22 @@ La primera reunión deberá incluir los acuerdos del **acta fundacional**, segú
 
 - **Acuerdo 2025-02-01:** Política de commits.
 - **Acuerdo 2025-02-02:** Política de ramas.
+
+---
+
+### ACTA 2025-03
+
+**Asistentes:**  
+- Herrera Romero, Jose Ángel
+- Milá de la roca dos Santos, Javier Ignacio
+- Palmas Santos, Carlos
+- Ortega Almirón, Raquel
+- Toledo González, Manuel
+- Sánchez Ruiz, Ángel
+**Acuerdos tomados:**
+
+- **Acuerdo 2025-03-01:** Plantilla de cambios.
+- **Acuerdo 2025-03-02:** Plantilla de incidencias.
 
 ---
 
