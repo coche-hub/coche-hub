@@ -1,20 +1,17 @@
 <div style="text-align: center;">
-  <img src="https://www.uvlhub.io/static/img/logos/logo-light.svg" alt="Logo">
+  <img src="app/static/img/logos/car.png" alt="Logo">
 </div>
 
-# uvlhub.io
+# Cochehub.io
 
-Repository of feature models in UVL format integrated with Zenodo and flamapy following Open Science principles - Developed by DiversoLab
+Repository of car models in CSV format integrated with Zenodo and flamapy following Open Science principles - Developed by DiversoLab
 
-## Official documentation
-
-You can consult the official documentation of the project at [docs.uvlhub.io](https://docs.uvlhub.io/)
 
 ## Development
 
 Before running the server for local development, you'll need to get an instance of Mailhog running through docker.
 Of course, this means you will need to have Docker and docker compose installed even for local development.
-For guidance on how, see the original UVLHub documentation.
+For guidance on how, see the original CocheHub documentation.
 Run:
 ```
 docker compose --env-file .env -f ./docker/docker-compose.local.yml up
