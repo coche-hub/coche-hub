@@ -1,20 +1,13 @@
 # Diario del Equipo
 
 
-Esta es una plantilla propuesta para llevar el diario del equipo. Esta plantilla se puede modificar o adaptar según las necesidades, pero el diario del equipo debe seguir las recomendaciones que se exponen en este documento y en el enunciado del **Proyecto de curso**, disponible en la wiki de la asignatura.
-
-> **Nota:**  
-> Es importante que no se haga un diario con todas las decisiones que se tomen, solo se deben incluir aquellas que sean relevantes para el desarrollo del proyecto en equipo.
-
----
-
 ## Datos del proyecto
 
-**Nombre del proyecto:**  
-*(usar el nombre del proyecto siguiendo el patrón indicado, por ejemplo: `salmorejo-hub`)*
+**Coche-hub:**  
 
-- **Grupo:** X (1, 2 o 3 según corresponda)
-- **Curso escolar:** 2024/2025
+
+- **Grupo:** 2 
+- **Curso escolar:** 2025/2026
 - **Asignatura:** Evolución y gestión de la configuración
 
 ---
@@ -23,18 +16,19 @@ Esta es una plantilla propuesta para llevar el diario del equipo. Esta plantilla
 
 *(en orden alfabético según apellido)*
 
-- Apellidos, Nombre
-- Apellidos, Nombre
-- Apellidos, Nombre
-- Apellidos, Nombre
-- Apellidos, Nombre
+- Herrera Romero, Jose Ángel
+- Milá de la roca dos Santos, Javier Ignacio
+- Palmas Santos, Carlos
+- Ortega Almirón, Raquel
+- Toledo González, Manuel
+- Sánchez Ruiz, Ángel
 
 ---
 
 ## Resumen de reuniones del equipo
 
 - **Total de reuniones:** TR
-- **Total de reuniones presenciales:** TRP
+- **Total de reuniones presenciales:** 0
 - **Total de reuniones virtuales:** TRV
 - **Total de tiempo empleado en reuniones presenciales:** TTRP
 - **Total de tiempo empleado en reuniones virtuales:** TTRV
@@ -53,16 +47,21 @@ Actas de las reuniones en las que se tomaron decisiones importantes.
 La primera reunión deberá incluir los acuerdos del **acta fundacional**, según lo indicado en el enunciado del proyecto).*
 
 **Asistentes:**  
-- A
-- B
-- C
+- Herrera Romero, Jose Ángel
+- Milá de la roca dos Santos, Javier Ignacio
+- Palmas Santos, Carlos
+- Ortega Almirón, Raquel
+- Toledo González, Manuel
+- Sánchez Ruiz, Ángel
 
 **Acuerdos tomados:**
 
-- **Acuerdo 2024-01-01:** Redacción del acuerdo.
-- **Acuerdo 2024-01-02:** Redacción del acuerdo.
-- …
-- **Acuerdo 2024-01-NN:** Redacción del acuerdo.
+- **Acuerdo 2024-01-01:** Si un miembro del equipo falta a tres reuniones sin motivo de peso será expulsado.
+- **Acuerdo 2024-01-02:** Si un miembro se niega a participar en las actividades y a realizar su trabajo, se hará una votación para valorar su expulsión.
+- **Acuerdo 2024-01-03:** El grupo se compromete a realizar un trabajo que nos permita alcanzar la nota de aprobado.
+- **Acuerdo 2024-01-04:** Se acepta el uso de IA en el trabajo siempre y cuando se reconozca su uso responsable
+- **Acuerdo 2024-01-05:** En el caso de que algún integrante abandone el grupo de proyecto, este ha de informar al resto del grupo ofreciendo una justificación.
+- **Acuerdo 2024-01-06:** Nos comprometemos a realizar los work items seleccionados y los obligatorios
 
 ---
 
