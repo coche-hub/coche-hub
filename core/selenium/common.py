@@ -49,11 +49,15 @@ def initialize_driver():
     # --- Local mode ---
     if driver_name == "chrome":
         options = webdriver.ChromeOptions()
+        if os.environ.get("HEADLESS_BROWSER", "").lower() == "true":
+            options.add_argument("--headless")
         service = ChromeService(ChromeDriverManager().install())
         driver = webdriver.Chrome(service=service, options=options)
 
     elif driver_name == "firefox":
         options = webdriver.FirefoxOptions()
+        if os.environ.get("HEADLESS_BROWSER", "").lower() == "true":
+            options.add_argument("--headless")
         service = FirefoxService(GeckoDriverManager().install())
         driver = webdriver.Firefox(service=service, options=options)
 
