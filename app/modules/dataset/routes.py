@@ -7,7 +7,16 @@ import uuid
 from datetime import datetime, timezone
 from zipfile import ZipFile
 
-from flask import abort, jsonify, make_response, redirect, render_template, request, send_from_directory, url_for
+from flask import (
+    abort,
+    jsonify,
+    make_response,
+    redirect,
+    render_template,
+    request,
+    send_from_directory,
+    url_for,
+)
 from flask_login import current_user, login_required
 
 from app.modules.dataset import dataset_bp
@@ -42,7 +51,6 @@ def create_dataset():
     form = DataSetForm()
 
     if request.method == "POST":
-
         dataset = None
 
         if not form.validate_on_submit():
@@ -170,7 +178,9 @@ def delete():
 def download_dataset(dataset_id):
     dataset = dataset_service.get_or_404(dataset_id)
 
-    file_path = f"uploads/user_{dataset.user_id}/dataset_{dataset.id}/"
+    from core.configuration.configuration import uploads_folder_name
+
+    file_path = os.path.join(uploads_folder_name(), f"user_{dataset.user_id}", f"dataset_{dataset.id}/")
 
     temp_dir = tempfile.mkdtemp()
     zip_path = os.path.join(temp_dir, f"dataset_{dataset_id}.zip")
@@ -229,7 +239,6 @@ def download_dataset(dataset_id):
 
 @dataset_bp.route("/doi/<path:doi>/", methods=["GET"])
 def subdomain_index(doi):
-
     # Check if the DOI is an old DOI
     new_doi = doi_mapping_service.get_new_doi(doi)
     if new_doi:
@@ -251,7 +260,11 @@ def subdomain_index(doi):
     # Save the cookie to the user's browser
     user_cookie = ds_view_record_service.create_cookie(dataset=dataset)
     resp = make_response(
-        render_template("dataset/view_dataset.html", dataset=dataset, recommended_datasets=recommended_datasets)
+        render_template(
+            "dataset/view_dataset.html",
+            dataset=dataset,
+            recommended_datasets=recommended_datasets,
+        )
     )
     resp.set_cookie("view_cookie", user_cookie)
 
@@ -261,7 +274,6 @@ def subdomain_index(doi):
 @dataset_bp.route("/dataset/unsynchronized/<int:dataset_id>/", methods=["GET"])
 @login_required
 def get_unsynchronized_dataset(dataset_id):
-
     # Get dataset
     dataset = dataset_service.get_unsynchronized_dataset(current_user.id, dataset_id)
 
@@ -271,7 +283,11 @@ def get_unsynchronized_dataset(dataset_id):
     # Get recommended datasets
     recommended_datasets = dataset_recommendation_service.get_recommended_datasets(dataset)
 
-    return render_template("dataset/view_dataset.html", dataset=dataset, recommended_datasets=recommended_datasets)
+    return render_template(
+        "dataset/view_dataset.html",
+        dataset=dataset,
+        recommended_datasets=recommended_datasets,
+    )
 
 
 @dataset_bp.route("/dataset/edit/<int:dataset_id>", methods=["GET", "POST"])

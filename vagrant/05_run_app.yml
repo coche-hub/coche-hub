@@ -15,6 +15,7 @@
       MARIADB_PASSWORD: "{{ mariadb_password }}"
       MARIADB_ROOT_PASSWORD: "{{ mariadb_root_password }}"
       WORKING_DIR: "{{ working_dir }}"
+      UPLOADS_DIR: "/home/vagrant/uploads"
 
   tasks:
 

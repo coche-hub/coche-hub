@@ -37,11 +37,11 @@
 | Miembro del equipo | Horas | Commits | LoC | Test | Issues | Work Item | Dificultad |
 |-------------------|-------|---------|-----|------|--------|-----------|------------|
 | Herrera Romero, Jose Ángel | 13,5   | 11     | 1498  | 29   | 3     | Trabajo en la recomendación de coches y en fakenodo| H |
-| Milá de la roca dos Santos, Javier Ignacio | 34    | 33      | 3323  | 67   | 9    | Trabajo en email validation y el 2fa | H  y L |
+| Milá de la roca dos Santos, Javier Ignacio | 34    | 33      | 3323  | 67   | 12    | Trabajo en email validation y el 2fa | H  y L |
 |Palmas Santos, Carlos| 25    | 26     | 3295  | 27   | 8     | Trabajo en la creación de comunidades| L |
 |Ortega Almirón, Raquel| 15    | 9      | 1870  | 25   | 4     | Trabajo en advanced datset search| M |
 |Toledo González, Manuel| 17    | 14  | 2908 | 23   | 7     | Trabajo en exploration by communities breve |  M  |
-|Sánchez Ruiz, Ángel| 22    | 8      | 1955  |  4  | 13     | Trabajo en new dataset | H |
+|Sánchez Ruiz, Ángel| 22    | 14      | 2520  |  30  | 14     | Trabajo en new dataset | H |
 | **TOTAL**         | 126,5  | 101    | 14849 | 175  | 44    | Se completaron todos los work items| H(3) / M(2) / L(2) |
 
 ### Definición de indicadores

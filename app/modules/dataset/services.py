@@ -55,8 +55,10 @@ class DataSetService(BaseService):
         current_user = dataset.user
         source_dir = current_user.temp_folder()
 
+        from core.configuration.configuration import uploads_folder_name
+
         # Create destination directory
-        dest_dir = os.path.join("uploads", f"user_{current_user.id}", f"dataset_{dataset.id}")
+        dest_dir = os.path.join(uploads_folder_name(), f"user_{current_user.id}", f"dataset_{dataset.id}")
         os.makedirs(dest_dir, exist_ok=True)
 
         # Move all CSV files
@@ -237,6 +239,8 @@ class DataSetService(BaseService):
         try:
             logger.info(f"Creating new version of dataset {dataset.id}...")
 
+            from core.configuration.configuration import uploads_folder_name
+
             # Create new metadata for the new version
             dsmetadata = self.dsmetadata_repository.create(**form.get_dsmetadata())
 
@@ -266,10 +270,10 @@ class DataSetService(BaseService):
             self.repository.session.flush()
 
             # Copy existing files from the old dataset to the new dataset location
-            working_dir = os.getenv("WORKING_DIR", "")
-            old_dataset_dir = os.path.join(working_dir, "uploads", f"user_{dataset.user_id}", f"dataset_{dataset.id}")
+            # working_dir = os.getenv("WORKING_DIR", "") # Removed as uploads_folder_name handles path
+            old_dataset_dir = os.path.join(uploads_folder_name(), f"user_{dataset.user_id}", f"dataset_{dataset.id}")
             new_dataset_dir = os.path.join(
-                working_dir, "uploads", f"user_{current_user.id}", f"dataset_{new_dataset.id}"
+                uploads_folder_name(), f"user_{current_user.id}", f"dataset_{new_dataset.id}"
             )
 
             os.makedirs(new_dataset_dir, exist_ok=True)
