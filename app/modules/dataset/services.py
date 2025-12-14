@@ -55,7 +55,7 @@ class DataSetService(BaseService):
         current_user = dataset.user
         source_dir = current_user.temp_folder()
 
-        from app.core.configuration.configuration import uploads_folder_name
+        from core.configuration.configuration import uploads_folder_name
 
         # Create destination directory
         dest_dir = os.path.join(uploads_folder_name(), f"user_{current_user.id}", f"dataset_{dataset.id}")
@@ -239,7 +239,7 @@ class DataSetService(BaseService):
         try:
             logger.info(f"Creating new version of dataset {dataset.id}...")
 
-            from app.core.configuration.configuration import uploads_folder_name
+            from core.configuration.configuration import uploads_folder_name
 
             # Create new metadata for the new version
             dsmetadata = self.dsmetadata_repository.create(**form.get_dsmetadata())
