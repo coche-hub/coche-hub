@@ -4,6 +4,14 @@
 
   tasks:
 
+    - name: Ensure uploads folder exists
+      file:
+        path: "{{ working_dir }}uploads"
+        state: directory
+        mode: '0777'
+        owner: vagrant
+        group: vagrant
+
     - name: Add commands to .bashrc
       lineinfile:
         path: /home/vagrant/.bashrc

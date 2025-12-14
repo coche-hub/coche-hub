@@ -3,11 +3,31 @@
   become: true
 
   tasks:
+    - name: Install dependencies
+      apt:
+        name:
+          - software-properties-common
+          - dirmngr
+          - apt-transport-https
+        state: present
+        update_cache: yes
+
+    - name: Add MariaDB GPG key
+      apt_key:
+        url: https://mariadb.org/mariadb_release_signing_key.asc
+        state: present
+
+    - name: Add MariaDB repository
+      apt_repository:
+        repo: 'deb [arch=amd64] https://dlm.mariadb.com/repo/mariadb-server/10.11/repo/ubuntu jammy main'
+        state: present
+
     - name: Install MariaDB Server
       apt:
         name:
           - mariadb-server
           - python3-pymysql
+        state: present
         update_cache: yes
 
     - name: Start and enable MariaDB service
