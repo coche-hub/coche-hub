@@ -120,11 +120,31 @@ var currentId = 0;
 
         function write_upload_error(error_message) {
             let upload_error = document.getElementById("upload_error");
-            let alert = document.createElement('p');
-            alert.style.margin = '0';
-            alert.style.padding = '0';
-            alert.textContent = 'Upload error: ' + error_message;
-            upload_error.appendChild(alert);
+            
+            // Si el mensaje es un objeto (errores de validación del formulario), formatearlo
+            if (typeof error_message === 'object' && error_message !== null) {
+                for (let field in error_message) {
+                    if (error_message.hasOwnProperty(field)) {
+                        let errors = error_message[field];
+                        if (Array.isArray(errors)) {
+                            errors.forEach(err => {
+                                let alert = document.createElement('p');
+                                alert.style.margin = '0';
+                                alert.style.padding = '0';
+                                alert.textContent = field + ': ' + err;
+                                upload_error.appendChild(alert);
+                            });
+                        }
+                    }
+                }
+            } else {
+                let alert = document.createElement('p');
+                alert.style.margin = '0';
+                alert.style.padding = '0';
+                alert.textContent = 'Upload error: ' + error_message;
+                upload_error.appendChild(alert);
+            }
+            
             upload_error.style.display = 'block';
         }
 

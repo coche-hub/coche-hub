@@ -7,7 +7,6 @@ from flask import Response, jsonify
 from flask_login import current_user
 
 from app.modules.dataset.models import DataSet
-from app.modules.featuremodel.models import FeatureModel
 from app.modules.zenodo.repositories import ZenodoRepository
 from core.configuration.configuration import uploads_folder_name
 from core.services.BaseService import BaseService
@@ -172,7 +171,7 @@ class ZenodoService(BaseService):
                 for author in dataset.ds_meta_data.authors
             ],
             "keywords": (
-                ["uvlhub"] if not dataset.ds_meta_data.tags else dataset.ds_meta_data.tags.split(", ") + ["uvlhub"]
+                ["cochehub"] if not dataset.ds_meta_data.tags else dataset.ds_meta_data.tags.split(", ") + ["cochehub"]
             ),
             "access_right": "open",
             "license": "CC-BY-4.0",
@@ -186,22 +185,30 @@ class ZenodoService(BaseService):
             raise Exception(error_message)
         return response.json()
 
-    def upload_file(self, dataset: DataSet, deposition_id: int, feature_model: FeatureModel, user=None) -> dict:
+    def upload_file(self, dataset: DataSet, deposition_id: int, file_obj, user=None) -> dict:
         """
         Upload a file to a deposition in Zenodo.
 
         Args:
             deposition_id (int): The ID of the deposition in Zenodo.
-            feature_model (FeatureModel): The FeatureModel object representing the feature model.
-            user (FeatureModel): The User object representing the file owner.
+            file_obj: Hubfile object representing the CSV file.
+            user: The User object representing the file owner.
 
         Returns:
             dict: The response in JSON format with the details of the uploaded file.
         """
-        uvl_filename = feature_model.fm_meta_data.uvl_filename
-        data = {"name": uvl_filename}
+        # Use Hubfile system
+        from app.modules.hubfile.models import Hubfile
+
+        if isinstance(file_obj, Hubfile):
+            filename = file_obj.name
+        else:
+            # Should not happen with CSV-only system
+            raise ValueError("Invalid file object type. Expected Hubfile.")
+
+        data = {"name": filename}
         user_id = current_user.id if user is None else user.id
-        file_path = os.path.join(uploads_folder_name(), f"user_{str(user_id)}", f"dataset_{dataset.id}/", uvl_filename)
+        file_path = os.path.join(uploads_folder_name(), f"user_{str(user_id)}", f"dataset_{dataset.id}/", filename)
         files = {"file": open(file_path, "rb")}
 
         publish_url = f"{self.ZENODO_API_URL}/{deposition_id}/files"

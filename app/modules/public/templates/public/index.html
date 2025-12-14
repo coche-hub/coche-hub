@@ -39,23 +39,14 @@
                     <select class="form-select" id="publication_type" name="publication_type">
                         <option value="">All Types</option>
                         <option value="none">None</option>
-                        <option value="annotationcollection">Annotation Collection</option>
-                        <option value="book">Book</option>
-                        <option value="section">Section</option>
-                        <option value="conferencepaper">Conference Paper</option>
-                        <option value="datamanagementplan">Data Management Plan</option>
-                        <option value="article">Article</option>
-                        <option value="patent">Patent</option>
-                        <option value="preprint">Preprint</option>
-                        <option value="deliverable">Project Deliverable</option>
-                        <option value="milestone">Project Milestone</option>
-                        <option value="proposal">Proposal</option>
-                        <option value="report">Report</option>
-                        <option value="softwaredocumentation">Software Documentation</option>
-                        <option value="taxonomictreatment">Taxonomic Treatment</option>
-                        <option value="technicalnote">Technical Note</option>
-                        <option value="thesis">Thesis</option>
-                        <option value="workingpaper">Working Paper</option>
+                        <option value="availabletobuy">Available to Buy</option>
+                        <option value="missing">Missing</option>
+                        <option value="registered">Registered</option>
+                        <option value="sold">Sold</option>
+                        <option value="fined">Fined</option>
+                        <option value="seen">Seen</option>
+                        <option value="parked">Parked</option>
+                        <option value="personal">Personal</option>
                         <option value="other">Other</option>
                     </select>
                 </div>
@@ -217,7 +208,7 @@
 
                             <h4 class="h4 mb-3" class="stats-color">
                                 <i data-feather="file" class="align-middle mr-2 stats-color"></i>&nbsp;{{
-                                feature_models_counter }} feature models
+                                csv_files_counter }} CSV files
                             </h4>
 
                             <h4 class="h4 mb-3" class="stats-color">
@@ -225,19 +216,9 @@
                                 total_dataset_views }} datasets viewed
                             </h4>
 
-                            <h4 class="h4 mb-3" class="stats-color">
-                                <i data-feather="eye" class="align-middle mr-2 stats-color"></i>&nbsp;{{
-                                total_feature_model_views }} feature models viewed
-                            </h4>
-
-                            <h4 class="h4 mb-3" class="stats-color">
-                                <i data-feather="download" class="align-middle mr-2 stats-color"></i>&nbsp;{{
-                                total_dataset_downloads }} datasets downloaded
-                            </h4>
-
                             <h4 class="h4" class="stats-color">
                                 <i data-feather="download" class="align-middle mr-2 stats-color"></i>&nbsp;{{
-                                total_feature_model_downloads }} feature models downloaded
+                                total_dataset_downloads }} datasets downloaded
                             </h4>
 
                         </h1>

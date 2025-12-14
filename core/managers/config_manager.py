@@ -30,7 +30,7 @@ class Config:
         f"{os.getenv('MARIADB_DATABASE', 'default_db')}"
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    MAIL_SERVER = os.getenv("MAIL_HOST", "localhost")
+    MAIL_SERVER = os.getenv("MAIL_SERVER", "localhost")
     MAIL_PORT = os.getenv("MAIL_PORT", "1025")
     MAIL_USERNAME = os.getenv("MAIL_USERNAME", "default")
     MAIL_PASSWORD = os.getenv("MAIL_PASSWORD", "default")

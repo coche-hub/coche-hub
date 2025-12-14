@@ -9,23 +9,14 @@ from app import db
 
 class PublicationType(Enum):
     NONE = "none"
-    ANNOTATION_COLLECTION = "annotationcollection"
-    BOOK = "book"
-    BOOK_SECTION = "section"
-    CONFERENCE_PAPER = "conferencepaper"
-    DATA_MANAGEMENT_PLAN = "datamanagementplan"
-    JOURNAL_ARTICLE = "article"
-    PATENT = "patent"
-    PREPRINT = "preprint"
-    PROJECT_DELIVERABLE = "deliverable"
-    PROJECT_MILESTONE = "milestone"
-    PROPOSAL = "proposal"
-    REPORT = "report"
-    SOFTWARE_DOCUMENTATION = "softwaredocumentation"
-    TAXONOMIC_TREATMENT = "taxonomictreatment"
-    TECHNICAL_NOTE = "technicalnote"
-    THESIS = "thesis"
-    WORKING_PAPER = "workingpaper"
+    AVAILABLE_TO_BUY_CARS = "availabletobuy"
+    MISSING_CARS = "missing"
+    REGISTERED_CARS = "registered"
+    SOLD_CARS = "sold"
+    FINED_CARS = "fined"
+    SEEN_CARS = "seen"
+    PARKED_CARS = "parked"
+    PERSONAL_CARS = "personal"
     OTHER = "other"
 
 
@@ -35,9 +26,7 @@ class Author(db.Model):
     affiliation = db.Column(db.String(120))
     orcid = db.Column(db.String(120))
     ds_meta_data_id = db.Column(db.Integer, db.ForeignKey("ds_meta_data.id"))
-    fm_meta_data_id = db.Column(
-        db.Integer, db.ForeignKey("fm_meta_data.id")
-    )  # Legacy - still used by featuremodel module
+    fm_meta_data_id = db.Column(db.Integer, nullable=True)  # Legacy - FK removed
 
     def to_dict(self):
         return {"name": self.name, "affiliation": self.affiliation, "orcid": self.orcid}

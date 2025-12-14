@@ -30,7 +30,7 @@ class DataSetSeeder(BaseSeeder):
                 user=user1,
                 title="Coches Dataset 0",
                 description="Example CSV dataset with car information - basic example",
-                publication_type=PublicationType.DATA_MANAGEMENT_PLAN,
+                publication_type=PublicationType.AVAILABLE_TO_BUY_CARS,
                 tags="cars, csv, example",
                 csv_filename="coches0.csv",
                 has_header=True,
@@ -40,7 +40,7 @@ class DataSetSeeder(BaseSeeder):
                 user=user2,
                 title="Coches Dataset 1",
                 description="Example CSV dataset with car specifications - extended data",
-                publication_type=PublicationType.REPORT,
+                publication_type=PublicationType.REGISTERED_CARS,
                 tags="automobiles, specifications, csv",
                 csv_filename="coches1.csv",
                 has_header=True,
@@ -50,7 +50,7 @@ class DataSetSeeder(BaseSeeder):
                 user=user1,
                 title="Coches Dataset 2",
                 description="Example CSV dataset with vehicle details - complete dataset",
-                publication_type=PublicationType.SOFTWARE_DOCUMENTATION,
+                publication_type=PublicationType.PERSONAL_CARS,
                 tags="vehicles, dataset, csv, demo",
                 csv_filename="coches2.csv",
                 has_header=True,
@@ -98,7 +98,7 @@ class DataSetSeeder(BaseSeeder):
             publication_type=publication_type,
             tags=tags,
             ds_metrics=ds_metrics,
-            dataset_doi=f"10.1234/example.{csv_filename.replace('.csv', '')}",
+            dataset_doi=f"https://doi.org/10.1000/182{csv_filename.replace('.csv', '')}",
         )
 
         # Add sample authors
