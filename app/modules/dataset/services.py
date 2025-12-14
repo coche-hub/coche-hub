@@ -16,7 +16,6 @@ from app.modules.dataset.repositories import (
     DSMetaDataRepository,
     DSViewRecordRepository,
 )
-from app.modules.featuremodel.repositories import FeatureModelRepository, FMMetaDataRepository
 from app.modules.hubfile.models import Hubfile
 from app.modules.hubfile.repositories import (
     HubfileDownloadRecordRepository,
@@ -39,10 +38,8 @@ def calculate_checksum_and_size(file_path):
 class DataSetService(BaseService):
     def __init__(self):
         super().__init__(DataSetRepository())
-        self.feature_model_repository = FeatureModelRepository()
         self.author_repository = AuthorRepository()
         self.dsmetadata_repository = DSMetaDataRepository()
-        self.fmmetadata_repository = FMMetaDataRepository()
         self.dsdownloadrecord_repository = DSDownloadRecordRepository()
         self.hubfiledownloadrecord_repository = HubfileDownloadRecordRepository()
         self.hubfilerepository = HubfileRepository()
@@ -86,8 +83,9 @@ class DataSetService(BaseService):
     def count_synchronized_datasets(self):
         return self.repository.count_synchronized_datasets()
 
-    def count_feature_models(self):
-        return self.feature_model_service.count_feature_models()
+    def total_csv_files(self) -> int:
+        """Count total CSV files across all datasets"""
+        return self.hubfilerepository.count()
 
     def count_authors(self) -> int:
         return self.author_repository.count()
