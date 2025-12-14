@@ -27,8 +27,15 @@ RUN apt-get clean \
 # Set the working directory in the container to /app
 WORKDIR /app
 
-# Copy requirements.txt to the /app working directory
+# Copy only dependency files first for better layer caching
 COPY requirements.txt .
+COPY pyproject.toml ./
+
+# Update pip
+RUN pip install --no-cache-dir --upgrade pip
+
+# Install any needed packages specified in requirements.txt
+RUN pip install -r requirements.txt
 
 # Removes cache at the build stage
 RUN find . -type d -name "__pycache__" -exec rm -r {} + && \
@@ -40,16 +47,9 @@ COPY --chmod=0755 scripts/wait-for-db.sh ./scripts/
 # Copy the init-testing-db.sh script and set execution permissions
 COPY --chmod=0755 scripts/init-testing-db.sh ./scripts/
 
-# Copy files
+# Copy application files
 COPY rosemary/ ./rosemary
-COPY pyproject.toml ./
 COPY docker/ ./docker
-
-# Update pip
-RUN pip install --no-cache-dir --upgrade pip
-
-# Install any needed packages specified in requirements.txt
-RUN pip install -r requirements.txt
 
 # Install Rosemary
 RUN pip install -e ./
