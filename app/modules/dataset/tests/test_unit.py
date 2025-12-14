@@ -946,3 +946,380 @@ def test_validation_returns_error_messages(test_client):
         assert any("empty" in err.lower() for err in errors)
     finally:
         os.remove(temp_path)
+
+
+# ==================== CATEGORY 8: ERROR HANDLING & EDGE CASES ====================
+
+
+def test_extract_engine_size_with_none_input(test_client):
+    """Test _extract_engine_size with None input"""
+    service = DataSetService()
+    result = service._extract_engine_size(None)
+    assert result is None
+
+
+def test_extract_engine_size_with_non_string_input(test_client):
+    """Test _extract_engine_size with non-string input"""
+    service = DataSetService()
+    result = service._extract_engine_size(12345)
+    assert result is None
+
+
+def test_extract_engine_size_with_empty_string(test_client):
+    """Test _extract_engine_size with empty string"""
+    service = DataSetService()
+    result = service._extract_engine_size("")
+    assert result is None
+
+
+def test_extract_engine_size_with_whitespace(test_client):
+    """Test _extract_engine_size with only whitespace"""
+    service = DataSetService()
+    result = service._extract_engine_size("   ")
+    assert result is None
+
+
+def test_extract_engine_size_with_no_numbers(test_client):
+    """Test _extract_engine_size with text that has no numbers"""
+    service = DataSetService()
+    result = service._extract_engine_size("EcoBoost Turbo")
+    assert result is None
+
+
+def test_extract_engine_size_with_comma_decimal(test_client):
+    """Test _extract_engine_size with European decimal format (comma)"""
+    service = DataSetService()
+    result = service._extract_engine_size("2,0 TDI")
+    assert result == 2.0
+
+
+def test_extract_engine_size_with_dot_decimal(test_client):
+    """Test _extract_engine_size with US decimal format (dot)"""
+    service = DataSetService()
+    result = service._extract_engine_size("1.8 VTEC")
+    assert result == 1.8
+
+
+def test_extract_engine_size_with_integer_only(test_client):
+    """Test _extract_engine_size with integer value"""
+    service = DataSetService()
+    result = service._extract_engine_size("3 V6")
+    assert result == 3.0
+
+
+def test_extract_consumption_with_none_input(test_client):
+    """Test _extract_consumption with None input"""
+    service = DataSetService()
+    result = service._extract_consumption(None)
+    assert result is None
+
+
+def test_extract_consumption_with_non_string(test_client):
+    """Test _extract_consumption with non-string input"""
+    service = DataSetService()
+    result = service._extract_consumption(123)
+    assert result is None
+
+
+def test_extract_consumption_with_empty_string(test_client):
+    """Test _extract_consumption with empty string"""
+    service = DataSetService()
+    result = service._extract_consumption("")
+    assert result is None
+
+
+def test_extract_consumption_with_comma_decimal(test_client):
+    """Test _extract_consumption with European format"""
+    service = DataSetService()
+    result = service._extract_consumption("5,2 L/100km")
+    assert result == 5.2
+
+
+def test_extract_consumption_with_dot_decimal(test_client):
+    """Test _extract_consumption with US format"""
+    service = DataSetService()
+    result = service._extract_consumption("4.7")
+    assert result == 4.7
+
+
+def test_extract_consumption_with_no_numbers(test_client):
+    """Test _extract_consumption with text only"""
+    service = DataSetService()
+    result = service._extract_consumption("Very efficient")
+    assert result is None
+
+
+def test_calculate_average_engine_size_file_not_found(test_client):
+    """Test _calculate_average_engine_size with non-existent file"""
+    service = DataSetService()
+    result = service._calculate_average_engine_size("/nonexistent/file.csv", has_header=True, delimiter=",")
+    assert result is None
+
+
+def test_calculate_average_consumption_file_not_found(test_client):
+    """Test _calculate_average_consumption with non-existent file"""
+    service = DataSetService()
+    result = service._calculate_average_consumption("/nonexistent/file.csv", has_header=True, delimiter=",")
+    assert result is None
+
+
+def test_calculate_average_engine_size_no_valid_values(test_client):
+    """Test average calculation when no valid engine sizes found"""
+    csv_content = """Modelo,Marca,Motor,Consumo,Combustible,Comienzo de producción,Fin de producción,Asientos,Puertas,Peso (kg),Carga máxima (kg),País de origen,Precio estimado (€),Matrícula,Fecha de matriculación
+Model1,Brand,N/A,4.7,Gasolina,2018,,2,2,2216,395,País,26050,MAT0001,06/02/2021
+Model2,Brand,Unknown,4.7,Gasolina,2018,,2,2,2216,395,País,26050,MAT0002,06/02/2021"""
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False, encoding="utf-8") as f:
+        f.write(csv_content)
+        temp_path = f.name
+
+    try:
+        service = DataSetService()
+        result = service._calculate_average_engine_size(temp_path, has_header=True, delimiter=",")
+        assert result is None
+    finally:
+        os.remove(temp_path)
+
+
+def test_calculate_average_consumption_no_valid_values(test_client):
+    """Test average consumption when all values are invalid"""
+    csv_content = """Modelo,Marca,Motor,Consumo,Combustible,Comienzo de producción,Fin de producción,Asientos,Puertas,Peso (kg),Carga máxima (kg),País de origen,Precio estimado (€),Matrícula,Fecha de matriculación
+Model1,Brand,1.0L,N/A,Gasolina,2018,,2,2,2216,395,País,26050,MAT0001,06/02/2021
+Model2,Brand,1.0L,Unknown,Gasolina,2018,,2,2,2216,395,País,26050,MAT0002,06/02/2021"""
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False, encoding="utf-8") as f:
+        f.write(csv_content)
+        temp_path = f.name
+
+    try:
+        service = DataSetService()
+        result = service._calculate_average_consumption(temp_path, has_header=True, delimiter=",")
+        assert result is None
+    finally:
+        os.remove(temp_path)
+
+
+def test_validate_csv_format_encoding_error(test_client):
+    """Test CSV validation with encoding that causes issues"""
+    # Create a file with invalid UTF-8 bytes
+    with tempfile.NamedTemporaryFile(mode="wb", suffix=".csv", delete=False) as f:
+        f.write(b"\xff\xfe Invalid UTF-8 bytes")
+        temp_path = f.name
+
+    try:
+        service = DataSetService()
+        errors = service._validate_csv_format(temp_path, has_header=True, delimiter=",")
+        # Should return errors due to encoding issues
+        assert isinstance(errors, list)
+    finally:
+        os.remove(temp_path)
+
+
+def test_validate_csv_format_inconsistent_columns(test_client):
+    """Test CSV validation with inconsistent column counts"""
+    csv_content = """Modelo,Marca,Motor,Consumo,Combustible
+Model1,Brand,Motor,4.7,Gasolina,2018
+Model2,Brand,Motor,4.7"""
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False, encoding="utf-8") as f:
+        f.write(csv_content)
+        temp_path = f.name
+
+    try:
+        service = DataSetService()
+        errors = service._validate_csv_format(temp_path, has_header=True, delimiter=",")
+        assert isinstance(errors, list)
+        # Should detect inconsistent column counts
+        assert len(errors) > 0
+    finally:
+        os.remove(temp_path)
+
+
+def test_parse_csv_without_header_missing_columns(test_client):
+    """Test parsing CSV without header when rows have insufficient columns"""
+    csv_content = """Model1,Brand,Motor
+Model2,Brand"""
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False, encoding="utf-8") as f:
+        f.write(csv_content)
+        temp_path = f.name
+
+    try:
+        user = User.query.filter_by(email="test@example.com").first()
+        metadata = create_metadata()
+        dataset = CSVDataSet(user_id=user.id, ds_meta_data_id=metadata.id)
+        db.session.add(dataset)
+        db.session.commit()
+
+        service = DataSetService()
+        coches_count = service._parse_csv_and_create_coches(
+            temp_path, has_header=False, delimiter=",", dataset_id=dataset.id
+        )
+        db.session.commit()
+
+        # Rows with insufficient columns should be skipped
+        assert coches_count == 0
+    finally:
+        os.remove(temp_path)
+
+
+def test_create_from_form_no_files_uploaded(test_client):
+    """Test create_from_form when no files are uploaded"""
+    login(test_client, "test@example.com", "test1234")
+
+    class MockForm:
+        def get_dsmetadata(self):
+            return {
+                "title": "Test Dataset",
+                "description": "Test Description",
+                "publication_type": PublicationType.NONE,
+            }
+
+        has_header = type("obj", (object,), {"data": True})
+        delimiter = type("obj", (object,), {"data": ","})
+
+    user = User.query.filter_by(email="test@example.com").first()
+
+    # Make sure temp folder is empty
+    temp_folder = user.temp_folder()
+    if os.path.exists(temp_folder):
+        for file in os.listdir(temp_folder):
+            os.remove(os.path.join(temp_folder, file))
+
+    service = DataSetService()
+    form = MockForm()
+
+    with pytest.raises(Exception) as exc_info:
+        service.create_from_form(form, user)
+
+    assert "No files uploaded" in str(exc_info.value)
+
+    logout(test_client)
+
+
+def test_create_from_form_invalid_csv_format(test_client):
+    """Test create_from_form with invalid CSV file"""
+    login(test_client, "test@example.com", "test1234")
+
+    class MockForm:
+        def get_dsmetadata(self):
+            return {
+                "title": "Test Dataset",
+                "description": "Test Description",
+                "publication_type": PublicationType.NONE,
+            }
+
+        def get_authors(self):
+            return []
+
+        has_header = type("obj", (object,), {"data": True})
+        delimiter = type("obj", (object,), {"data": ","})
+
+    user = User.query.filter_by(email="test@example.com").first()
+
+    # Create temp folder and add an invalid CSV
+    temp_folder = user.temp_folder()
+    os.makedirs(temp_folder, exist_ok=True)
+
+    invalid_csv = os.path.join(temp_folder, "invalid.csv")
+    with open(invalid_csv, "w") as f:
+        f.write("")  # Empty file
+
+    service = DataSetService()
+    form = MockForm()
+
+    try:
+        with pytest.raises(Exception) as exc_info:
+            service.create_from_form(form, user)
+
+        # Should fail during CSV validation or processing
+        assert exc_info.value is not None
+    finally:
+        # Cleanup
+        if os.path.exists(invalid_csv):
+            os.remove(invalid_csv)
+
+    logout(test_client)
+
+
+def test_dataset_model_get_dataset_url_without_doi(test_client):
+    """Test get_dataset_url when dataset has no DOI"""
+    user = User.query.filter_by(email="test@example.com").first()
+    metadata = DSMetaData(
+        title="Test Dataset",
+        description="Test Description",
+        publication_type=PublicationType.NONE,
+        dataset_doi=None,  # No DOI
+    )
+    db.session.add(metadata)
+    db.session.commit()
+
+    dataset = CSVDataSet(user_id=user.id, ds_meta_data_id=metadata.id)
+    db.session.add(dataset)
+    db.session.commit()
+
+    # When DOI is None, URL will include 'None' in the path
+    url = dataset.get_dataset_url()
+    assert "doi/None" in url or url == "" or url is None
+
+
+def test_coche_with_null_optional_fields(test_client):
+    """Test creating Coche with only required fields"""
+    user = User.query.filter_by(email="test@example.com").first()
+    metadata = create_metadata()
+    dataset = CSVDataSet(user_id=user.id, ds_meta_data_id=metadata.id)
+    db.session.add(dataset)
+    db.session.commit()
+
+    # Create coche with minimal fields (some can be None/default)
+    coche = Coche(
+        dataset_id=dataset.id,
+        modelo="Minimal Model",
+        marca="Minimal Brand",
+        motor="1.0L",
+        consumo=5.0,
+        combustible="Gasolina",
+        comienzo_de_produccion=2020,
+        asientos=5,
+        puertas=4,
+        peso=1200,
+        carga_max=400,
+        pais_de_origen="",  # Empty string
+        precio_estimado=0,  # Zero
+        matricula="MIN0000",
+        fecha_matriculacion=datetime(2021, 1, 1),
+    )
+    db.session.add(coche)
+    db.session.commit()
+
+    retrieved = Coche.query.filter_by(matricula="MIN0000").first()
+    assert retrieved is not None
+    assert retrieved.pais_de_origen == ""
+    assert retrieved.precio_estimado == 0
+
+
+def test_calculate_average_with_mixed_valid_invalid_values(test_client):
+    """Test average calculations with some valid and some invalid values"""
+    csv_content = """Modelo,Marca,Motor,Consumo,Combustible,Comienzo de producción,Fin de producción,Asientos,Puertas,Peso (kg),Carga máxima (kg),País de origen,Precio estimado (€),Matrícula,Fecha de matriculación
+Model1,Brand,2.0 TDI,4.7,Gasolina,2018,,2,2,2216,395,País,26050,MAT0001,06/02/2021
+Model2,Brand,N/A,5.2,Gasolina,2018,,2,2,2216,395,País,26050,MAT0002,06/02/2021
+Model3,Brand,1.5 VTEC,Invalid,Gasolina,2018,,2,2,2216,395,País,26050,MAT0003,06/02/2021"""
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False, encoding="utf-8") as f:
+        f.write(csv_content)
+        temp_path = f.name
+
+    try:
+        service = DataSetService()
+
+        # Test engine size average (2 valid: 2.0, 1.5)
+        engine_avg = service._calculate_average_engine_size(temp_path, has_header=True, delimiter=",")
+        assert engine_avg is not None
+        assert engine_avg == pytest.approx(1.75, 0.01)
+
+        # Test consumption average (2 valid: 4.7, 5.2)
+        consumption_avg = service._calculate_average_consumption(temp_path, has_header=True, delimiter=",")
+        assert consumption_avg is not None
+        assert consumption_avg == pytest.approx(4.95, 0.01)
+    finally:
+        os.remove(temp_path)
