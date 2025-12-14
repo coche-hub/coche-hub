@@ -1,3 +1,20 @@
+## [5.0.0](https://github.com/coche-hub/coche-hub/compare/v4.0.0...v5.0.0) (2025-12-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* uvlhub remainings deleted
+* remainings of uvl deleted
+
+### Bug Fixes
+
+* Arreglar las pruebas de Selenium existentes ([2b07401](https://github.com/coche-hub/coche-hub/commit/2b0740183941d7d9adced5aa1d2869a7997af4aa))
+* Arrelar docker-compose.dev.yml ([793cc19](https://github.com/coche-hub/coche-hub/commit/793cc19d6211de39cc8568ab2eda289cb0375c12))
+* remainings of uvl deleted ([3029a8c](https://github.com/coche-hub/coche-hub/commit/3029a8c5a364edd897f463ecb40e791b697f3026))
+* removed metions of uvlhub in env.examples ([f6514bb](https://github.com/coche-hub/coche-hub/commit/f6514bb27cdbdce6b5ff48c340a92551eadeadbe))
+* removed metions of uvlhub in readme ([22f4130](https://github.com/coche-hub/coche-hub/commit/22f41307a0b7ee4cc5d159391fcfc7bf4467eb47))
+* uvlhub remainings deleted ([08cdce9](https://github.com/coche-hub/coche-hub/commit/08cdce9fc29b5e1ec682d6763512dc95d86441b9))
+
 ## [4.0.0](https://github.com/coche-hub/coche-hub/compare/v3.0.0...v4.0.0) (2025-12-12)
 
 
