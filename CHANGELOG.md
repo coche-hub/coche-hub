@@ -1,3 +1,19 @@
+## [5.1.0](https://github.com/coche-hub/coche-hub/compare/v5.0.0...v5.1.0) (2025-12-14)
+
+
+### Features
+
+* added mailhog to vagrant ([08a3e81](https://github.com/coche-hub/coche-hub/commit/08a3e8158c8cbd33a8dbd727d0027de2ca68f4d6))
+* Make dev Dockerfile cache installed packages ([77c4426](https://github.com/coche-hub/coche-hub/commit/77c4426da32ab7f7f4ea4012658af769d4806e83))
+
+
+### Bug Fixes
+
+* Fix config reading MAIL_HOST instead of MAIL_SERVER ([5a01841](https://github.com/coche-hub/coche-hub/commit/5a018413e74034c4dfd06c576d986e9c568e8211))
+* Fix CSV upload failing because of wrong import ([e4e9e27](https://github.com/coche-hub/coche-hub/commit/e4e9e277fcafb5ebea8946d68f3b621819f8fe23))
+* uploads now works in vagrant and local ([92c1b9f](https://github.com/coche-hub/coche-hub/commit/92c1b9fba60df7d1267875d413e98e79c5943f34))
+* vagrant works with UUID ([656be56](https://github.com/coche-hub/coche-hub/commit/656be56a1e13d9fa388c29377023d069c7435e8c))
+
 ## [5.0.0](https://github.com/coche-hub/coche-hub/compare/v4.0.0...v5.0.0) (2025-12-14)
 
 
