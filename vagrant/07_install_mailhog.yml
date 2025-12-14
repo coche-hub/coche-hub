@@ -1,0 +1,34 @@
+---
+- hosts: all
+  become: true
+
+  tasks:
+
+    - name: Download Mailhog binary
+      get_url:
+        url: https://github.com/mailhog/MailHog/releases/download/v1.0.1/MailHog_linux_amd64
+        dest: /usr/local/bin/mailhog
+        mode: '0755'
+
+    - name: Create Mailhog systemd service
+      copy:
+        dest: /etc/systemd/system/mailhog.service
+        content: |
+          [Unit]
+          Description=Mailhog
+          After=network.target
+
+          [Service]
+          Type=simple
+          ExecStart=/usr/local/bin/mailhog
+          Restart=on-failure
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Enable and start Mailhog service
+      systemd:
+        name: mailhog
+        enabled: yes
+        state: started
+        daemon_reload: yes

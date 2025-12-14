@@ -71,59 +71,66 @@ class ZenodoService(BaseService):
 
         success = True
 
-        # Create a test file
-        working_dir = os.getenv("WORKING_DIR", "")
-        file_path = os.path.join(working_dir, "test_file.txt")
-        with open(file_path, "w") as f:
+        # Create a temporary file
+        import tempfile
+
+        # Use a temporary file that cleans itself up (mostly)
+        # But for requests.post we need the path, so we use delete=False and delete manually
+        fd, file_path = tempfile.mkstemp(suffix=".txt", text=True)
+        with os.fdopen(fd, "w") as f:
             f.write("This is a test file with some content.")
 
         messages = []  # List to store messages
 
-        # Step 1: Create a deposition on Zenodo
-        data = {
-            "metadata": {
-                "title": "Test Deposition",
-                "upload_type": "dataset",
-                "description": "This is a test deposition created via Zenodo API",
-                "creators": [{"name": "John Doe"}],
-            }
-        }
-
-        response = requests.post(self.ZENODO_API_URL, json=data, params=self.params, headers=self.headers)
-
-        if response.status_code != 201:
-            return jsonify(
-                {
-                    "success": False,
-                    "messages": f"Failed to create test deposition on Zenodo. Response code: {response.status_code}",
+        try:
+            # Step 1: Create a deposition on Zenodo
+            data = {
+                "metadata": {
+                    "title": "Test Deposition",
+                    "upload_type": "dataset",
+                    "description": "This is a test deposition created via Zenodo API",
+                    "creators": [{"name": "John Doe"}],
                 }
-            )
+            }
 
-        deposition_id = response.json()["id"]
+            response = requests.post(self.ZENODO_API_URL, json=data, params=self.params, headers=self.headers)
 
-        # Step 2: Upload an empty file to the deposition
-        data = {"name": "test_file.txt"}
-        files = {"file": open(file_path, "rb")}
-        publish_url = f"{self.ZENODO_API_URL}/{deposition_id}/files"
-        response = requests.post(publish_url, params=self.params, data=data, files=files)
-        files["file"].close()  # Close the file after uploading
+            if response.status_code != 201:
+                return jsonify(
+                    {
+                        "success": False,
+                        "messages": f"Failed to create test deposition on Zenodo. "
+                        f"Response code: {response.status_code}",
+                    }
+                )
 
-        logger.info(f"Publish URL: {publish_url}")
-        logger.info(f"Params: {self.params}")
-        logger.info(f"Data: {data}")
-        logger.info(f"Files: {files}")
-        logger.info(f"Response Status Code: {response.status_code}")
-        logger.info(f"Response Content: {response.content}")
+            deposition_id = response.json()["id"]
 
-        if response.status_code != 201:
-            messages.append(f"Failed to upload test file to Zenodo. Response code: {response.status_code}")
-            success = False
+            # Step 2: Upload an empty file to the deposition
+            data = {"name": "test_file.txt"}
+            files = {"file": open(file_path, "rb")}
+            publish_url = f"{self.ZENODO_API_URL}/{deposition_id}/files"
+            response = requests.post(publish_url, params=self.params, data=data, files=files)
+            files["file"].close()  # Close the file after uploading
 
-        # Step 3: Delete the deposition
-        response = requests.delete(f"{self.ZENODO_API_URL}/{deposition_id}", params=self.params)
+            logger.info(f"Publish URL: {publish_url}")
+            logger.info(f"Params: {self.params}")
+            logger.info(f"Data: {data}")
+            logger.info(f"Files: {files}")
+            logger.info(f"Response Status Code: {response.status_code}")
+            logger.info(f"Response Content: {response.content}")
 
-        if os.path.exists(file_path):
-            os.remove(file_path)
+            if response.status_code != 201:
+                messages.append(f"Failed to upload test file to Zenodo. Response code: {response.status_code}")
+                success = False
+
+            # Step 3: Delete the deposition
+            response = requests.delete(f"{self.ZENODO_API_URL}/{deposition_id}", params=self.params)
+
+        finally:
+            # Cleanup temporary file
+            if os.path.exists(file_path):
+                os.remove(file_path)
 
         return jsonify({"success": success, "messages": messages})
 
