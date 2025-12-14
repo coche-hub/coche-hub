@@ -170,7 +170,9 @@ def delete():
 def download_dataset(dataset_id):
     dataset = dataset_service.get_or_404(dataset_id)
 
-    file_path = f"uploads/user_{dataset.user_id}/dataset_{dataset.id}/"
+    from app.core.configuration.configuration import uploads_folder_name
+
+    file_path = os.path.join(uploads_folder_name(), f"user_{dataset.user_id}", f"dataset_{dataset.id}/")
 
     temp_dir = tempfile.mkdtemp()
     zip_path = os.path.join(temp_dir, f"dataset_{dataset_id}.zip")

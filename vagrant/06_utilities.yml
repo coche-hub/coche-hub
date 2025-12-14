@@ -6,7 +6,7 @@
 
     - name: Ensure uploads folder exists
       file:
-        path: "{{ working_dir }}uploads"
+        path: "/home/vagrant/uploads"
         state: directory
         mode: '0777'
         owner: vagrant
