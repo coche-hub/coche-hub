@@ -1,3 +1,10 @@
+## [5.2.0](https://github.com/coche-hub/coche-hub/compare/v5.1.0...v5.2.0) (2025-12-15)
+
+
+### Features
+
+* update env example files ([ed1b336](https://github.com/coche-hub/coche-hub/commit/ed1b336b5b3bfd045a379c579b76b2dc9e4356d1))
+
 ## [5.1.0](https://github.com/coche-hub/coche-hub/compare/v5.0.0...v5.1.0) (2025-12-14)
 
 
