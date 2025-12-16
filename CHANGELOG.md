@@ -1,3 +1,63 @@
+## [5.1.0](https://github.com/coche-hub/coche-hub/compare/v5.0.0...v5.1.0) (2025-12-14)
+
+
+### Features
+
+* added mailhog to vagrant ([08a3e81](https://github.com/coche-hub/coche-hub/commit/08a3e8158c8cbd33a8dbd727d0027de2ca68f4d6))
+* Make dev Dockerfile cache installed packages ([77c4426](https://github.com/coche-hub/coche-hub/commit/77c4426da32ab7f7f4ea4012658af769d4806e83))
+
+
+### Bug Fixes
+
+* Fix config reading MAIL_HOST instead of MAIL_SERVER ([5a01841](https://github.com/coche-hub/coche-hub/commit/5a018413e74034c4dfd06c576d986e9c568e8211))
+* Fix CSV upload failing because of wrong import ([e4e9e27](https://github.com/coche-hub/coche-hub/commit/e4e9e277fcafb5ebea8946d68f3b621819f8fe23))
+* uploads now works in vagrant and local ([92c1b9f](https://github.com/coche-hub/coche-hub/commit/92c1b9fba60df7d1267875d413e98e79c5943f34))
+* vagrant works with UUID ([656be56](https://github.com/coche-hub/coche-hub/commit/656be56a1e13d9fa388c29377023d069c7435e8c))
+
+## [5.0.0](https://github.com/coche-hub/coche-hub/compare/v4.0.0...v5.0.0) (2025-12-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* uvlhub remainings deleted
+* remainings of uvl deleted
+
+### Bug Fixes
+
+* Arreglar las pruebas de Selenium existentes ([2b07401](https://github.com/coche-hub/coche-hub/commit/2b0740183941d7d9adced5aa1d2869a7997af4aa))
+* Arrelar docker-compose.dev.yml ([793cc19](https://github.com/coche-hub/coche-hub/commit/793cc19d6211de39cc8568ab2eda289cb0375c12))
+* remainings of uvl deleted ([3029a8c](https://github.com/coche-hub/coche-hub/commit/3029a8c5a364edd897f463ecb40e791b697f3026))
+* removed metions of uvlhub in env.examples ([f6514bb](https://github.com/coche-hub/coche-hub/commit/f6514bb27cdbdce6b5ff48c340a92551eadeadbe))
+* removed metions of uvlhub in readme ([22f4130](https://github.com/coche-hub/coche-hub/commit/22f41307a0b7ee4cc5d159391fcfc7bf4467eb47))
+* uvlhub remainings deleted ([08cdce9](https://github.com/coche-hub/coche-hub/commit/08cdce9fc29b5e1ec682d6763512dc95d86441b9))
+
+## [4.0.0](https://github.com/coche-hub/coche-hub/compare/v3.0.0...v4.0.0) (2025-12-12)
+
+
+### ⚠ BREAKING CHANGES
+
+* fakenodo unsynchronize
+* doi error message added
+* publication types changed
+
+### Features
+
+* publication types changed ([197048e](https://github.com/coche-hub/coche-hub/commit/197048e48a91cea50f399a04f4d4faaa54bdd3bc))
+
+
+### Bug Fixes
+
+* doi error message added ([ee17e6c](https://github.com/coche-hub/coche-hub/commit/ee17e6c80e6a63da25cfa28a20881768dbcd5034))
+* error handling for incorrect DOI format ([eedaebd](https://github.com/coche-hub/coche-hub/commit/eedaebd1a630af0c447a35a8634e1b4fe1f5a5bf))
+* fail adding curators when editing ([f2609b3](https://github.com/coche-hub/coche-hub/commit/f2609b3a34b2e67421f59bae87a8f04910e304d1))
+* fail when editing a community ([5dc947d](https://github.com/coche-hub/coche-hub/commit/5dc947d1d7e048f067b7b9b9ed4a1fc19a8eb337))
+* fakenodo unsynchronize ([e24d271](https://github.com/coche-hub/coche-hub/commit/e24d271763583b7f829f8dbdb2f0aee4b094104e))
+* Formatting issues ([055e8f9](https://github.com/coche-hub/coche-hub/commit/055e8f9114ab5af7b98636f3d6ce69e554696e66))
+* show unsynchronized ([f72ad2d](https://github.com/coche-hub/coche-hub/commit/f72ad2db624f890712c31fab723f7beba9f948e1))
+* test recommendations ([707977a](https://github.com/coche-hub/coche-hub/commit/707977a12cce551dcf48c8161c08bac1beb0b271))
+* test suit for update community ([f075029](https://github.com/coche-hub/coche-hub/commit/f0750293ba623f9e857a81dee837c7686d2800ff))
+* Update migrations ([8a7530d](https://github.com/coche-hub/coche-hub/commit/8a7530db2275d2f72666efe1739f42c78f8ebdcf))
+
 ## [3.0.0](https://github.com/coche-hub/coche-hub/compare/v2.1.0...v3.0.0) (2025-12-10)
 
 
