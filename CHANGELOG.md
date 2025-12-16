@@ -1,3 +1,10 @@
+## [5.2.1](https://github.com/coche-hub/coche-hub/compare/v5.2.0...v5.2.1) (2025-12-16)
+
+
+### Bug Fixes
+
+* footer changed ([98fbe84](https://github.com/coche-hub/coche-hub/commit/98fbe8416c89f90eb19065fe30a28df0a3b5d080))
+
 ## [5.2.0](https://github.com/coche-hub/coche-hub/compare/v5.1.0...v5.2.0) (2025-12-15)
 
 
